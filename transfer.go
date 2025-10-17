@@ -17,7 +17,24 @@ import (
 	"github.com/bsv-blockchain/go-sdk/transaction/template/p2pkh"
 )
 
-func (m *MNEE) Transfer(wif string, mneeTransferDTO []TransferMneeDTO) error {
+func (m *MNEE) Transfer(wifs []string, mneeTransferDTO []TransferMneeDTO) error {
+	var addressToWifMap map[string]*primitives.PrivateKey = make(map[string]*primitives.PrivateKey)
+	var addresses []string = make([]string, 0, len(wifs))
+	for _, wif := range wifs {
+		privateKey, err := primitives.PrivateKeyFromWif(wif)
+		if err != nil {
+			return err
+		}
+
+		address, err := script.NewAddressFromPublicKey(privateKey.PubKey(), true)
+		if err != nil {
+			return err
+		}
+
+		addressToWifMap[address.AddressString] = privateKey
+		addresses = append(addresses, address.AddressString)
+	}
+
 	var newClient *http.Client = &http.Client{
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
@@ -92,13 +109,17 @@ retry:
 		totalTransferAmt += dto.Amount
 	}
 
+	utxosRequest, err := json.Marshal(&addresses)
+	if err != nil {
+		return err
+	}
+
 	var inputAddresses []string = make([]string, 0)
 	var totalInputAmount uint64
-	var actualTransferAmt uint64
 	request, err := http.NewRequest(
 		http.MethodPost,
 		(m.mneeURL + "/v1/utxos?auth_token=" + m.mneeToken),
-		bytes.NewBuffer(fmt.Appendf(nil, "[\"%s\"]", m.senderAddress)),
+		bytes.NewBuffer(utxosRequest),
 	)
 	if err != nil {
 		return err
@@ -117,14 +138,11 @@ retry:
 		return err
 	}
 
-	if len(txos) != 0 {
-		inputAddresses = append(inputAddresses, m.senderAddress)
-	}
-
 outer:
 	for _, txo := range txos {
 		if txo.Data == nil || txo.Data.Bsv21 == nil || txo.Txid == nil ||
-			txo.Script == nil || txo.Data.Bsv21.Amt == 0 {
+			txo.Script == nil || txo.Data.Bsv21.Amt == 0 ||
+			len(txo.Owners) == 0 {
 			continue
 		}
 
@@ -135,13 +153,8 @@ outer:
 			return err
 		}
 
-		privateKey, err := primitives.PrivateKeyFromWif(wif)
-		if err != nil {
-			return err
-		}
-
 		sighashFlags := sighash.ForkID | sighash.All | sighash.AnyOneCanPay
-		unlockingScriptTemplate, err := p2pkh.Unlock(privateKey, &sighashFlags)
+		unlockingScriptTemplate, err := p2pkh.Unlock(addressToWifMap[txo.Owners[0]], &sighashFlags)
 		if err != nil {
 			return err
 		}
@@ -158,6 +171,7 @@ outer:
 		}
 
 		if totalInputAmount >= totalTransferAmt {
+			var actualTransferAmt uint64
 			for _, dto := range mneeTransferDTO {
 				if slices.Contains(inputAddresses, dto.Address) {
 					continue
@@ -198,7 +212,7 @@ outer:
 							return err
 						}
 
-						changeAddress, err := script.NewAddressFromString(m.senderAddress)
+						changeAddress, err := script.NewAddressFromString(txo.Owners[0])
 						if err != nil {
 							return err
 						}
@@ -296,7 +310,7 @@ outer:
 
 		errorsMessage, ok := errorResponse["message"].(string)
 		if !ok {
-			return errors.New("non-200 response code from mnee cosigner")
+			return fmt.Errorf("received from mnee-cosigner %d", transferResponse.StatusCode)
 		}
 
 		return errors.New(errorsMessage)

@@ -11,7 +11,7 @@ type Fee struct {
 }
 
 type SystemConfig struct {
-	Decimals    uint8   `json:"decimals,omitempty"`
+	Decimals    uint8   `json:"decimals"`
 	Approver    *string `json:"approver,omitempty"`
 	FeeAddress  *string `json:"feeAddress,omitempty"`
 	BurnAddress *string `json:"burnAddress,omitempty"`
@@ -26,7 +26,7 @@ type TransferMneeDTO struct {
 }
 
 type BsvData struct {
-	Decimals uint16  `json:"dec,omitempty"`
+	Decimals uint8   `json:"dec"`
 	Amt      uint64  `json:"amt"`
 	Id       *string `json:"id,omitempty"`
 	Op       *string `json:"op,omitempty"`

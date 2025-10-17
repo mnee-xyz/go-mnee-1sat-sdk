@@ -9,12 +9,40 @@ import (
 	"github.com/bsv-blockchain/go-sdk/script"
 )
 
+const (
+	EnvMain    string = "MAIN"
+	EnvSandbox string = "SANDBOX"
+)
+
 type MNEE struct {
-	mneeURL       string
-	mneeToken     string
-	wif           string
-	senderAddress string
-	config        *SystemConfig
+	mneeURL   string
+	mneeToken string
+	config    *SystemConfig
+}
+
+func NewMneeInstance(environment string, authToken string) (*MNEE, error) {
+
+	var mnee MNEE
+
+	switch environment {
+
+	case EnvMain:
+		{
+			mnee.mneeURL = "https://proxy-api.mnee.net"
+			mnee.mneeToken = authToken
+		}
+
+	case EnvSandbox:
+		{
+			mnee.mneeURL = "https://sandbox-proxy-api.mnee.net"
+			mnee.mneeToken = authToken
+		}
+
+	default:
+		return nil, errors.New("environment must be valid")
+	}
+
+	return &mnee, nil
 }
 
 func lock(a *script.Address, pubkey *primitives.PublicKey) (*script.Script, error) {

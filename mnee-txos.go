@@ -3,16 +3,20 @@ package mnee
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
-func (m *MNEE) GetUTXOS() ([]MneeTxo, error) {
+func (m *MNEE) GetMneeTxos(addresses []string) ([]MneeTxo, error) {
+
+	addressesBuffer, err := json.Marshal(&addresses)
+	if err != nil {
+		return nil, err
+	}
 
 	request, err := http.NewRequest(
 		http.MethodPost,
 		(m.mneeURL + "/v1/utxos?auth_token=" + m.mneeToken),
-		bytes.NewBuffer(fmt.Appendf(nil, "[\"%s\"]", m.senderAddress)),
+		bytes.NewBuffer(addressesBuffer),
 	)
 	if err != nil {
 		return nil, err
