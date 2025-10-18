@@ -41,3 +41,30 @@ func (m *MNEE) GetUnspentTxos(ctx context.Context, addresses []string) ([]MneeTx
 
 	return txos, nil
 }
+
+func (m *MNEE) GetTxo(ctx context.Context, outpoint string) (*MneeTxo, error) {
+
+	utxoRequest, err := http.NewRequest(
+		http.MethodGet,
+		(m.mneeURL + "/v1/txo/" + outpoint + "?auth_token=" + m.mneeToken),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	utxoResponse, err := m.httpClient.Do(utxoRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	defer utxoResponse.Body.Close()
+
+	var txo MneeTxo
+	err = json.NewDecoder(utxoResponse.Body).Decode(&txo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txo, nil
+}

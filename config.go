@@ -8,15 +8,16 @@ import (
 
 func (m *MNEE) GetConfig(ctx context.Context) (*SystemConfig, error) {
 
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	select {
 
 	case <-ctx.Done():
 		return nil, ctx.Err()
 
-	case <-m.configTimer:
-		{
-			m.config = nil
-		}
+	case <-m.refreshTimer:
+		break
 
 	default:
 		{
@@ -26,17 +27,17 @@ func (m *MNEE) GetConfig(ctx context.Context) (*SystemConfig, error) {
 		}
 	}
 
-	newRequest, err := http.NewRequestWithContext(
+	configRequest, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		(m.mneeURL + "/v1/config" + m.mneeToken),
+		(m.mneeURL + "/v1/config?auth_token" + m.mneeToken),
 		nil,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	configResponse, err := m.httpClient.Do(newRequest)
+	configResponse, err := m.httpClient.Do(configRequest)
 	if err != nil {
 		return nil, err
 	}

@@ -106,6 +106,10 @@ outer:
 			continue
 		}
 
+		if _, ok := addressToPrivateKey[txos[i].Owners[0]]; !ok {
+			continue
+		}
+
 		scriptBytes, err := base64.StdEncoding.DecodeString(*txos[i].Script)
 		if err != nil {
 			return err
