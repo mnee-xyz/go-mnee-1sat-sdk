@@ -1,4 +1,4 @@
-module github.com/go-mnee-1sat-sdk
+module github.com/mnee-xyz/go-mnee-1sat-sdk
 
 go 1.24.5
 
