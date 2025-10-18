@@ -20,6 +20,12 @@ type SystemConfig struct {
 	Fees        []Fee   `json:"fees,omitempty"`
 }
 
+type BalanceData struct {
+	Amt      float64 `json:"amt"`
+	Precised float64 `json:"precised"`
+	Address  *string `json:"address"`
+}
+
 type TransferMneeDTO struct {
 	Amount  uint64 `json:"amount"`
 	Address string `json:"address,omitempty"`

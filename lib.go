@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
 	"github.com/bsv-blockchain/go-sdk/script"
@@ -15,9 +16,10 @@ const (
 )
 
 type MNEE struct {
-	mneeURL   string
-	mneeToken string
-	config    *SystemConfig
+	mneeURL     string
+	mneeToken   string
+	config      *SystemConfig
+	configTimer <-chan time.Time
 }
 
 func NewMneeInstance(environment string, authToken string) (*MNEE, error) {
@@ -42,10 +44,19 @@ func NewMneeInstance(environment string, authToken string) (*MNEE, error) {
 		return nil, errors.New("environment must be valid")
 	}
 
+	config, err := mnee.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	mnee.config = config
+	mnee.configTimer = time.Tick(time.Hour)
+
 	return &mnee, nil
 }
 
 func lock(a *script.Address, pubkey *primitives.PublicKey) (*script.Script, error) {
+
 	if len(a.PublicKeyHash) != 20 {
 		return nil, errors.New("invalid public key hash")
 	}
@@ -61,6 +72,7 @@ func lock(a *script.Address, pubkey *primitives.PublicKey) (*script.Script, erro
 }
 
 func createTransferInscription(tokenID string, amt uint64) ([]byte, error) {
+
 	var inscription map[string]string = make(map[string]string)
 	inscription["p"] = "bsv-20"
 	inscription["op"] = "transfer"

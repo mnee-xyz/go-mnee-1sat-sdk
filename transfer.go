@@ -18,7 +18,8 @@ import (
 )
 
 func (m *MNEE) Transfer(wifs []string, mneeTransferDTO []TransferMneeDTO) error {
-	var addressToWifMap map[string]*primitives.PrivateKey = make(map[string]*primitives.PrivateKey)
+
+	var addressToPrivateKey map[string]*primitives.PrivateKey = make(map[string]*primitives.PrivateKey)
 	var addresses []string = make([]string, 0, len(wifs))
 	for _, wif := range wifs {
 		privateKey, err := primitives.PrivateKeyFromWif(wif)
@@ -31,7 +32,7 @@ func (m *MNEE) Transfer(wifs []string, mneeTransferDTO []TransferMneeDTO) error 
 			return err
 		}
 
-		addressToWifMap[address.AddressString] = privateKey
+		addressToPrivateKey[address.AddressString] = privateKey
 		addresses = append(addresses, address.AddressString)
 	}
 
@@ -43,31 +44,18 @@ func (m *MNEE) Transfer(wifs []string, mneeTransferDTO []TransferMneeDTO) error 
 		Timeout: 0,
 	}
 
-retry:
-	configRequest, err := http.NewRequest(
-		http.MethodGet,
-		(m.mneeURL + "/v1/config?auth_token=" + m.mneeToken),
-		nil,
-	)
+	config, err := m.GetConfig()
 	if err != nil {
 		return err
 	}
 
-	configResponse, err := newClient.Do(configRequest)
-	if err != nil {
-		return err
-	}
-
-	var config SystemConfig
-	err = json.NewDecoder(configResponse.Body).Decode(&config)
-	if err != nil {
-		configResponse.Body.Close()
-		return err
-	}
-
-	configResponse.Body.Close()
 	if config.Approver == nil || config.FeeAddress == nil || config.Fees == nil || config.TokenId == nil {
-		goto retry
+		return errors.New("invalid config")
+	}
+
+	approverPubKey, err := primitives.PublicKeyFromString(*config.Approver)
+	if err != nil {
+		return err
 	}
 
 	var mneeTransaction *transaction.Transaction = transaction.NewTransaction()
@@ -82,12 +70,7 @@ retry:
 			return err
 		}
 
-		pubKey, err := primitives.PublicKeyFromString(*config.Approver)
-		if err != nil {
-			return err
-		}
-
-		lockingScript, err := lock(address, pubKey)
+		lockingScript, err := lock(address, approverPubKey)
 		if err != nil {
 			return err
 		}
@@ -154,7 +137,7 @@ outer:
 		}
 
 		sighashFlags := sighash.ForkID | sighash.All | sighash.AnyOneCanPay
-		unlockingScriptTemplate, err := p2pkh.Unlock(addressToWifMap[txo.Owners[0]], &sighashFlags)
+		unlockingScriptTemplate, err := p2pkh.Unlock(addressToPrivateKey[txo.Owners[0]], &sighashFlags)
 		if err != nil {
 			return err
 		}
@@ -188,12 +171,7 @@ outer:
 							return err
 						}
 
-						pubKey, err := primitives.PublicKeyFromString(*config.Approver)
-						if err != nil {
-							return err
-						}
-
-						feeLockingScript, err := lock(feeAddress, pubKey)
+						feeLockingScript, err := lock(feeAddress, approverPubKey)
 						if err != nil {
 							return err
 						}
@@ -217,7 +195,7 @@ outer:
 							return err
 						}
 
-						changeLockingScript, err := lock(changeAddress, pubKey)
+						changeLockingScript, err := lock(changeAddress, approverPubKey)
 						if err != nil {
 							return err
 						}
@@ -243,12 +221,7 @@ outer:
 							return err
 						}
 
-						pubKey, err := primitives.PublicKeyFromString(*config.Approver)
-						if err != nil {
-							return err
-						}
-
-						feeLockingScript, err := lock(feeAddress, pubKey)
+						feeLockingScript, err := lock(feeAddress, approverPubKey)
 						if err != nil {
 							return err
 						}
@@ -310,7 +283,7 @@ outer:
 
 		errorsMessage, ok := errorResponse["message"].(string)
 		if !ok {
-			return fmt.Errorf("received from mnee-cosigner %d", transferResponse.StatusCode)
+			return fmt.Errorf("status received from mnee-cosigner -> %d", transferResponse.StatusCode)
 		}
 
 		return errors.New(errorsMessage)
