@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
@@ -18,6 +19,7 @@ const (
 type MNEE struct {
 	mneeURL     string
 	mneeToken   string
+	httpClient  *http.Client
 	config      *SystemConfig
 	configTimer <-chan time.Time
 }
@@ -44,12 +46,13 @@ func NewMneeInstance(environment string, authToken string) (*MNEE, error) {
 		return nil, errors.New("environment must be valid")
 	}
 
-	config, err := mnee.GetConfig()
-	if err != nil {
-		return nil, err
+	mnee.httpClient = &http.Client{
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+			ForceAttemptHTTP2: false,
+		},
+		Timeout: 0,
 	}
-
-	mnee.config = config
 	mnee.configTimer = time.Tick(time.Hour)
 
 	return &mnee, nil

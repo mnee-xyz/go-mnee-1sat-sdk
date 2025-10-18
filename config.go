@@ -1,13 +1,17 @@
 package mnee
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 )
 
-func (m *MNEE) GetConfig() (*SystemConfig, error) {
+func (m *MNEE) GetConfig(ctx context.Context) (*SystemConfig, error) {
 
 	select {
+
+	case <-ctx.Done():
+		return nil, ctx.Err()
 
 	case <-m.configTimer:
 		{
@@ -22,20 +26,17 @@ func (m *MNEE) GetConfig() (*SystemConfig, error) {
 		}
 	}
 
-	var newClient *http.Client = &http.Client{
-		Transport: &http.Transport{
-			DisableKeepAlives: true,
-			ForceAttemptHTTP2: false,
-		},
-		Timeout: 0,
-	}
-
-	newRequest, err := http.NewRequest(http.MethodGet, (m.mneeURL + "/v1/config" + m.mneeToken), nil)
+	newRequest, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		(m.mneeURL + "/v1/config" + m.mneeToken),
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	configResponse, err := newClient.Do(newRequest)
+	configResponse, err := m.httpClient.Do(newRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +48,8 @@ func (m *MNEE) GetConfig() (*SystemConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	m.config = &systemConfig
 
 	return &systemConfig, nil
 }

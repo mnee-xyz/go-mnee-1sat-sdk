@@ -2,6 +2,7 @@ package mnee
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -17,7 +18,7 @@ import (
 	"github.com/bsv-blockchain/go-sdk/transaction/template/p2pkh"
 )
 
-func (m *MNEE) Transfer(wifs []string, mneeTransferDTO []TransferMneeDTO) error {
+func (m *MNEE) Transfer(ctx context.Context, wifs []string, mneeTransferDTO []TransferMneeDTO, withTxos bool, mneeTxos []MneeTxo) error {
 
 	var addressToPrivateKey map[string]*primitives.PrivateKey = make(map[string]*primitives.PrivateKey)
 	var addresses []string = make([]string, 0, len(wifs))
@@ -36,15 +37,7 @@ func (m *MNEE) Transfer(wifs []string, mneeTransferDTO []TransferMneeDTO) error 
 		addresses = append(addresses, address.AddressString)
 	}
 
-	var newClient *http.Client = &http.Client{
-		Transport: &http.Transport{
-			DisableKeepAlives: true,
-			ForceAttemptHTTP2: false,
-		},
-		Timeout: 0,
-	}
-
-	config, err := m.GetConfig()
+	config, err := m.GetConfig(ctx)
 	if err != nil {
 		return err
 	}
@@ -92,65 +85,52 @@ func (m *MNEE) Transfer(wifs []string, mneeTransferDTO []TransferMneeDTO) error 
 		totalTransferAmt += dto.Amount
 	}
 
-	utxosRequest, err := json.Marshal(&addresses)
-	if err != nil {
-		return err
+	var txos []MneeTxo = make([]MneeTxo, 0)
+	if withTxos {
+		txos = mneeTxos
+	} else {
+		txos, err = m.GetUnspentTxos(ctx, addresses)
+		if err != nil {
+			return err
+		}
 	}
 
 	var inputAddresses []string = make([]string, 0)
 	var totalInputAmount uint64
-	request, err := http.NewRequest(
-		http.MethodPost,
-		(m.mneeURL + "/v1/utxos?auth_token=" + m.mneeToken),
-		bytes.NewBuffer(utxosRequest),
-	)
-	if err != nil {
-		return err
-	}
-
-	request.Header.Set("Content-Type", "application/json")
-
-	var txos []MneeTxo = make([]MneeTxo, 0)
-	response, err := newClient.Do(request)
-	if err != nil {
-		return err
-	}
-
-	err = json.NewDecoder(response.Body).Decode(&txos)
-	if err != nil {
-		return err
-	}
 
 outer:
-	for _, txo := range txos {
-		if txo.Data == nil || txo.Data.Bsv21 == nil || txo.Txid == nil ||
-			txo.Script == nil || txo.Data.Bsv21.Amt == 0 ||
-			len(txo.Owners) == 0 {
+	for i := range txos {
+		if txos[i].Data == nil || txos[i].Data.Bsv21 == nil || txos[i].Txid == nil ||
+			txos[i].Script == nil || txos[i].Data.Bsv21.Amt == 0 ||
+			len(txos[i].Owners) == 0 {
 			continue
 		}
 
-		totalInputAmount += txo.Data.Bsv21.Amt
-
-		scriptBytes, err := base64.StdEncoding.DecodeString(*txo.Script)
+		scriptBytes, err := base64.StdEncoding.DecodeString(*txos[i].Script)
 		if err != nil {
 			return err
 		}
 
 		sighashFlags := sighash.ForkID | sighash.All | sighash.AnyOneCanPay
-		unlockingScriptTemplate, err := p2pkh.Unlock(addressToPrivateKey[txo.Owners[0]], &sighashFlags)
+		unlockingScriptTemplate, err := p2pkh.Unlock(addressToPrivateKey[txos[i].Owners[0]], &sighashFlags)
 		if err != nil {
 			return err
 		}
 
 		err = mneeTransaction.AddInputFrom(
-			*txo.Txid,
-			uint32(txo.Vout),
+			*txos[i].Txid,
+			uint32(txos[i].Vout),
 			hex.EncodeToString(scriptBytes),
-			uint64(txo.Satoshis),
+			uint64(txos[i].Satoshis),
 			unlockingScriptTemplate,
 		)
 		if err != nil {
 			return err
+		}
+
+		totalInputAmount += txos[i].Data.Bsv21.Amt
+		if !slices.Contains(inputAddresses, txos[i].Owners[0]) {
+			inputAddresses = append(inputAddresses, txos[i].Owners[0])
 		}
 
 		if totalInputAmount >= totalTransferAmt {
@@ -190,7 +170,7 @@ outer:
 							return err
 						}
 
-						changeAddress, err := script.NewAddressFromString(txo.Owners[0])
+						changeAddress, err := script.NewAddressFromString(txos[i].Owners[0])
 						if err != nil {
 							return err
 						}
@@ -258,7 +238,8 @@ outer:
 		return err
 	}
 
-	transferRequest, err := http.NewRequest(
+	transferRequest, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodPost,
 		(m.mneeURL + "/v2/transfer?auth_token=" + m.mneeToken),
 		bytes.NewBuffer(fmt.Appendf(nil, "{\"rawtx\":\"%s\"}", base64.StdEncoding.EncodeToString(mneeTransaction.Bytes()))),
@@ -267,7 +248,7 @@ outer:
 		return err
 	}
 
-	transferResponse, err := newClient.Do(transferRequest)
+	transferResponse, err := m.httpClient.Do(transferRequest)
 	if err != nil {
 		return err
 	}

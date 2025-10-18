@@ -2,18 +2,20 @@ package mnee
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 )
 
-func (m *MNEE) GetMneeTxos(addresses []string) ([]MneeTxo, error) {
+func (m *MNEE) GetUnspentTxos(ctx context.Context, addresses []string) ([]MneeTxo, error) {
 
 	addressesBuffer, err := json.Marshal(&addresses)
 	if err != nil {
 		return nil, err
 	}
 
-	request, err := http.NewRequest(
+	utxosRequest, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodPost,
 		(m.mneeURL + "/v1/utxos?auth_token=" + m.mneeToken),
 		bytes.NewBuffer(addressesBuffer),
@@ -22,23 +24,17 @@ func (m *MNEE) GetMneeTxos(addresses []string) ([]MneeTxo, error) {
 		return nil, err
 	}
 
-	request.Header.Set("Content-Type", "application/json")
-
-	var newClient *http.Client = &http.Client{
-		Transport: &http.Transport{
-			DisableKeepAlives: true,
-			ForceAttemptHTTP2: false,
-		},
-		Timeout: 0,
-	}
+	utxosRequest.Header.Set("Content-Type", "application/json")
 
 	var txos []MneeTxo = make([]MneeTxo, 0)
-	response, err := newClient.Do(request)
+	utxosResponse, err := m.httpClient.Do(utxosRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.NewDecoder(response.Body).Decode(&txos)
+	defer utxosResponse.Body.Close()
+
+	err = json.NewDecoder(utxosResponse.Body).Decode(&txos)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,22 @@
 package mnee
 
-import (
-	"github.com/lib/pq"
+type TokenOperation string
+type TokenProtocol string
+
+const (
+	TRANSFER    TokenOperation = "transfer"
+	DEPLOY_MINT TokenOperation = "deploy+mint"
+)
+
+const (
+	ACTION_DEPLOY   string = "deploy"
+	ACTION_MINT     string = "mint"
+	ACTION_TRANSFER string = "transfer"
+	ACTION_REDEEM   string = "redeem"
+)
+
+const (
+	BSV20 TokenProtocol = "bsv-20"
 )
 
 type Fee struct {
@@ -18,17 +33,6 @@ type SystemConfig struct {
 	MintAddress *string `json:"mintAddress,omitempty"`
 	TokenId     *string `json:"tokenId,omitempty"`
 	Fees        []Fee   `json:"fees,omitempty"`
-}
-
-type BalanceData struct {
-	Amt      float64 `json:"amt"`
-	Precised float64 `json:"precised"`
-	Address  *string `json:"address"`
-}
-
-type TransferMneeDTO struct {
-	Amount  uint64 `json:"amount"`
-	Address string `json:"address,omitempty"`
 }
 
 type BsvData struct {
@@ -51,15 +55,61 @@ type Data struct {
 }
 
 type MneeTxo struct {
-	Satoshis uint16         `json:"satoshis,omitempty"`
-	Height   uint64         `json:"height"`
-	Idx      uint64         `json:"idx"`
-	Score    uint64         `json:"score"`
-	Vout     uint64         `json:"vout"`
-	Outpoint *string        `json:"outpoint,omitempty"`
-	Script   *string        `json:"script,omitempty"`
-	Txid     *string        `json:"txid,omitempty"`
-	Data     *Data          `json:"data,omitempty"`
-	Owners   pq.StringArray `json:"owners,omitempty"`
-	Senders  pq.StringArray `json:"senders,omitempty"`
+	Satoshis uint16   `json:"satoshis,omitempty"`
+	Height   uint64   `json:"height"`
+	Idx      uint64   `json:"idx"`
+	Score    uint64   `json:"score"`
+	Vout     uint64   `json:"vout"`
+	Outpoint *string  `json:"outpoint,omitempty"`
+	Script   *string  `json:"script,omitempty"`
+	Txid     *string  `json:"txid,omitempty"`
+	Data     *Data    `json:"data,omitempty"`
+	Owners   []string `json:"owners,omitempty"`
+	Senders  []string `json:"senders,omitempty"`
+}
+
+type TransferMneeDTO struct {
+	Amount  uint64 `json:"amount"`
+	Address string `json:"address,omitempty"`
+}
+
+type TransactionHistoryDTO struct {
+	Height    uint64   `json:"height"`
+	Idx       uint64   `json:"idx"`
+	Score     uint64   `json:"score"`
+	Rawtx     *string  `json:"rawtx,omitempty"`
+	Txid      *string  `json:"txid,omitempty"`
+	Outs      []uint64 `json:"outs,omitempty"`
+	Senders   []string `json:"senders,omitempty"`
+	Receivers []string `json:"receivers,omitempty"`
+}
+
+type BalanceDataDTO struct {
+	Amt      float64 `json:"amt"`
+	Precised float64 `json:"precised"`
+	Address  *string `json:"address"`
+}
+
+type BaseTokenInscription struct {
+	Protocol  TokenProtocol  `json:"p"`
+	Amount    string         `json:"amt"`
+	Operation TokenOperation `json:"op"`
+	Decimal   string         `json:"dec"`
+}
+
+type TokenMetadata struct {
+	CurrentSupply string `json:"currentSupply"`
+	Action        string `json:"action"`
+	Version       string `json:"version"`
+}
+
+type DeployChainInscription struct {
+	BaseTokenInscription
+	TokenID  string         `json:"id"`
+	Metadata *TokenMetadata `json:"metadata,omitempty"`
+}
+
+type TransferTokenInscription struct {
+	BaseTokenInscription
+	TokenID string `json:"id"`
 }

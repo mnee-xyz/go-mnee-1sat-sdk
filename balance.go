@@ -2,18 +2,20 @@ package mnee
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 )
 
-func (m *MNEE) GetMneeBalance(addresses []string) ([]BalanceData, error) {
+func (m *MNEE) GetBalances(ctx context.Context, addresses []string) ([]BalanceDataDTO, error) {
 
 	addressesBuffer, err := json.Marshal(&addresses)
 	if err != nil {
 		return nil, err
 	}
 
-	request, err := http.NewRequest(
+	balancesRequest, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodPost,
 		(m.mneeURL + "/v2/balance?auth_token=" + m.mneeToken),
 		bytes.NewBuffer(addressesBuffer),
@@ -22,23 +24,17 @@ func (m *MNEE) GetMneeBalance(addresses []string) ([]BalanceData, error) {
 		return nil, err
 	}
 
-	request.Header.Set("Content-Type", "application/json")
+	balancesRequest.Header.Set("Content-Type", "application/json")
 
-	var newClient *http.Client = &http.Client{
-		Transport: &http.Transport{
-			DisableKeepAlives: true,
-			ForceAttemptHTTP2: false,
-		},
-		Timeout: 0,
-	}
-
-	var balances []BalanceData = make([]BalanceData, 0)
-	response, err := newClient.Do(request)
+	var balances []BalanceDataDTO = make([]BalanceDataDTO, 0)
+	balancesResponse, err := m.httpClient.Do(balancesRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.NewDecoder(response.Body).Decode(&balances)
+	defer balancesResponse.Body.Close()
+
+	err = json.NewDecoder(balancesResponse.Body).Decode(&balances)
 	if err != nil {
 		return nil, err
 	}
