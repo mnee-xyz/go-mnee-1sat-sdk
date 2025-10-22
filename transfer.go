@@ -311,7 +311,7 @@ outer:
 }
 
 func (m *MNEE) AsynchronousTransfer(ctx context.Context, wifs []string, mneeTransferDTO []TransferMneeDTO, withTxos bool,
-	mneeTxos []MneeTxo) (*string, error) {
+	mneeTxos []MneeTxo, callbackURL *string, callbackSecret *string) (*string, error) {
 
 	var addressToPrivateKey map[string]*primitives.PrivateKey = make(map[string]*primitives.PrivateKey)
 	var addresses []string = make([]string, 0, len(wifs))
@@ -533,6 +533,49 @@ outer:
 	err = mneeTransaction.Sign()
 	if err != nil {
 		return nil, err
+	}
+
+	var transferRequestDTO TransferRequestDTO = TransferRequestDTO{
+		RawTx:          base64.StdEncoding.EncodeToString(mneeTransaction.Bytes()),
+		CallbackURL:    callbackURL,
+		CallbackSecret: callbackSecret,
+	}
+
+	transferRequestBuffer, err := json.Marshal(&transferRequestDTO)
+	if err != nil {
+		return nil, err
+	}
+
+	transferRequest, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		(m.mneeURL + "/v2/transfer?auth_token=" + m.mneeToken),
+		bytes.NewBuffer(transferRequestBuffer),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	transferResponse, err := m.httpClient.Do(transferRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	defer transferResponse.Body.Close()
+
+	if transferResponse.StatusCode > 299 {
+		var errorResponse map[string]any
+		err = json.NewDecoder(transferResponse.Body).Decode(&errorResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		errorMessage, ok := errorResponse["message"].(string)
+		if !ok {
+			return nil, fmt.Errorf("status received from mnee-cosigner -> %d", transferResponse.StatusCode)
+		}
+
+		return nil, errors.New(errorMessage)
 	}
 
 	return nil, nil

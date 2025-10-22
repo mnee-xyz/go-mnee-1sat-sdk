@@ -1,11 +1,21 @@
 package mnee
 
+import (
+	"time"
+)
+
 type TokenOperation string
 type TokenProtocol string
+type TicketStatus string
 
 const (
 	TRANSFER    TokenOperation = "transfer"
 	DEPLOY_MINT TokenOperation = "deploy+mint"
+)
+
+const (
+	BROADCASTING = "BROADCASTING"
+	SUCCESS      = "SUCCESS"
 )
 
 const (
@@ -33,6 +43,19 @@ type SystemConfig struct {
 	MintAddress *string `json:"mintAddress,omitempty"`
 	TokenId     *string `json:"tokenId,omitempty"`
 	Fees        []Fee   `json:"fees,omitempty"`
+}
+
+type Ticket struct {
+	ID              *string      `json:"id,omitempty"`
+	TxID            *string      `json:"tx_id,omitempty"`
+	TxHex           *string      `json:"tx_hex,omitempty"`
+	ActionRequested *string      `json:"action_requested,omitempty"`
+	CallbackURL     *string      `json:"callback_url,omitempty"`
+	CallbackSecret  *string      `json:"callback_secret,omitempty"`
+	Status          TicketStatus `json:"status,omitempty,omitzero"`
+	CreatedAt       *time.Time   `json:"createdAt,omitempty"`
+	UpdatedAt       *time.Time   `json:"updatedAt,omitempty"`
+	Errors          []string     `json:"errors"`
 }
 
 type BsvData struct {
@@ -71,6 +94,12 @@ type MneeTxo struct {
 type TransferMneeDTO struct {
 	Amount  uint64 `json:"amount"`
 	Address string `json:"address,omitempty"`
+}
+
+type TransferRequestDTO struct {
+	RawTx          string  `json:"rawtx,omitempty"`
+	CallbackURL    *string `json:"callback_url,omitempty"`
+	CallbackSecret *string `json:"callback_secret,omitempty"`
 }
 
 type TransferResponseDTO struct {
