@@ -30,7 +30,7 @@ func (m *MNEE) GetConfig(ctx context.Context) (*SystemConfig, error) {
 	configRequest, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		(m.mneeURL + "/v1/config?auth_token" + m.mneeToken),
+		(m.mneeURL + "/v1/config?auth_token=" + m.mneeToken),
 		nil,
 	)
 	if err != nil {
