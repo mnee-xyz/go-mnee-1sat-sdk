@@ -73,6 +73,11 @@ type TransferMneeDTO struct {
 	Address string `json:"address,omitempty"`
 }
 
+type TransferResponseDTO struct {
+	Txid  *string `json:"txid,omitempty"`
+	Txhex *string `json:"txhex,omitempty"`
+}
+
 type TransactionHistoryDTO struct {
 	Height    uint64   `json:"height"`
 	Idx       uint64   `json:"idx"`

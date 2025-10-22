@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
-func (m *MNEE) GetTransactionHistory(ctx context.Context, addresses []string) ([]TransactionHistoryDTO, error) {
+func (m *MNEE) GetSpecificTransactionHistory(ctx context.Context, addresses []string, from int, limit int) ([]TransactionHistoryDTO, error) {
 
 	addressesBuffer, err := json.Marshal(&addresses)
 	if err != nil {
@@ -17,7 +18,7 @@ func (m *MNEE) GetTransactionHistory(ctx context.Context, addresses []string) ([
 	historyRequest, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		(m.mneeURL + "/v1/sync?auth_token" + m.mneeToken),
+		(m.mneeURL + "/v1/sync?auth_token=" + m.mneeToken + "&from=" + strconv.Itoa(from) + "&limit=" + strconv.Itoa(limit)),
 		bytes.NewBuffer(addressesBuffer),
 	)
 	if err != nil {
