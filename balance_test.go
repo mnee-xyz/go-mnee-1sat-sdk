@@ -67,5 +67,5 @@ func TestGetBalances_Integration(t *testing.T) {
 	assertions.NotNil(balances, "Balances response should not be nil (should be '[]')")
 	assertions.Len(balances, 0, "Balances list should be empty")
 
-	t.Log("Successfully handled empty address list (returned '[]')")
+	t.Log("✅ Successfully handled empty address list (returned '[]')")
 }

@@ -54,5 +54,5 @@ func TestGetUnspentTxos_Integration(t *testing.T) {
 	assertions.NotNil(txos, "TXOs response should not be nil (should be '[]')")
 	assertions.Len(txos, 0, "TXOs list should be empty")
 
-	t.Log("Successfully handled empty address list (returned '[]')")
+	t.Log("✅ Successfully handled empty address list (returned '[]')")
 }

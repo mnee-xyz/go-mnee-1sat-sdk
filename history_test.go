@@ -43,4 +43,6 @@ func TestGetSpecificTransactionHistory_Integration(t *testing.T) {
 	if len(history) > 0 {
 		assertions.NotNil(history[0].Txid, "History item should have a Txid")
 	}
+
+	t.Logf("✅ Successfully fetched transaction history for %d addresses", len(addressesToTest))
 }

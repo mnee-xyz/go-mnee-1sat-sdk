@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 
@@ -563,6 +564,7 @@ outer:
 
 	defer transferResponse.Body.Close()
 
+	fmt.Println("Status Code:", transferResponse.StatusCode)
 	if transferResponse.StatusCode > 299 {
 		var errorResponse map[string]any
 		err = json.NewDecoder(transferResponse.Body).Decode(&errorResponse)
@@ -578,16 +580,15 @@ outer:
 		return nil, errors.New(errorMessage)
 	}
 
-	var transferResponseBody string
-
-	err = json.NewDecoder(transferResponse.Body).Decode(&transferResponseBody)
+	bodyBytes, err := io.ReadAll(transferResponse.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	if transferResponseBody != "" {
-		return &transferResponseBody, nil
+	ticketID := string(bodyBytes)
+	if ticketID == "" {
+		return nil, errors.New("received an empty ticket ID from server")
 	}
 
-	return nil, nil
+	return &ticketID, nil
 }
