@@ -564,7 +564,6 @@ outer:
 
 	defer transferResponse.Body.Close()
 
-	fmt.Println("Status Code:", transferResponse.StatusCode)
 	if transferResponse.StatusCode > 299 {
 		var errorResponse map[string]any
 		err = json.NewDecoder(transferResponse.Body).Decode(&errorResponse)
@@ -585,10 +584,11 @@ outer:
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	ticketID := string(bodyBytes)
-	if ticketID == "" {
+	if len(bodyBytes) == 0 {
 		return nil, errors.New("received an empty ticket ID from server")
 	}
+
+	var ticketID string = string(bodyBytes)
 
 	return &ticketID, nil
 }
