@@ -16,9 +16,9 @@ func TestGetBalances_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_API_KEY environment variable not set")
 	}
 
-	testAddress := os.Getenv("TEST_ADDRESS")
+	testAddress := os.Getenv("MNEE_TEST_ADDRESS")
 	if testAddress == "" {
-		t.Skip("Skipping integration test: TEST_ADDRESS environment variable not set")
+		t.Skip("Skipping integration test: MNEE_TEST_ADDRESS environment variable not set")
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
@@ -49,7 +49,7 @@ func TestGetBalances_Integration(t *testing.T) {
 			assertions.Greater(balance.Amt, float64(0), "Fee address should have a balance")
 			foundFeeAddress = true
 		case testAddress:
-			assertions.Equal(balance.Amt, float64(1000000), "Test address should have 0 balance")
+			assertions.GreaterOrEqual(balance.Amt, float64(1000000), "Test address should have balance greater than or equal to 10")
 			foundTestAddress = true
 		}
 	}

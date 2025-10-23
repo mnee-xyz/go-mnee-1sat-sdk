@@ -279,7 +279,7 @@ outer:
 		Rawtx *string `json:"rawtx,omitempty"`
 	}
 
-	err = json.NewDecoder(transferRequest.Body).Decode(&transferResponseBody)
+	err = json.NewDecoder(transferResponse.Body).Decode(&transferResponseBody)
 	if err != nil {
 		return nil, err
 	}
@@ -576,6 +576,17 @@ outer:
 		}
 
 		return nil, errors.New(errorMessage)
+	}
+
+	var transferResponseBody string
+
+	err = json.NewDecoder(transferResponse.Body).Decode(&transferResponseBody)
+	if err != nil {
+		return nil, err
+	}
+
+	if transferResponseBody != "" {
+		return &transferResponseBody, nil
 	}
 
 	return nil, nil

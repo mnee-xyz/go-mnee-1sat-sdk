@@ -18,9 +18,9 @@ func TestIsMneeScript_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_API_KEY environment variable not set")
 	}
 
-	testAddress := os.Getenv("TEST_ADDRESS")
+	testAddress := os.Getenv("MNEE_TEST_ADDRESS")
 	if testAddress == "" {
-		t.Skip("Skipping integration test: TEST_ADDRESS environment variable not set")
+		t.Skip("Skipping integration test: MNEE_TEST_ADDRESS environment variable not set")
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
