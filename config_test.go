@@ -33,5 +33,5 @@ func TestGetConfig_Integration(t *testing.T) {
 	assertions.Greater(len(config.Fees), 0, "Config should have at least one fee")
 	assertions.GreaterOrEqual(config.Decimals, uint8(0), "Config should have valid decimals")
 
-	t.Logf("Successfully fetched config. Token ID: %s", *config.TokenId)
+	t.Logf("✅ Successfully fetched config. Token ID: %s", *config.TokenId)
 }

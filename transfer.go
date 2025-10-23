@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 
@@ -279,7 +280,7 @@ outer:
 		Rawtx *string `json:"rawtx,omitempty"`
 	}
 
-	err = json.NewDecoder(transferRequest.Body).Decode(&transferResponseBody)
+	err = json.NewDecoder(transferResponse.Body).Decode(&transferResponseBody)
 	if err != nil {
 		return nil, err
 	}
@@ -563,6 +564,7 @@ outer:
 
 	defer transferResponse.Body.Close()
 
+	fmt.Println("Status Code:", transferResponse.StatusCode)
 	if transferResponse.StatusCode > 299 {
 		var errorResponse map[string]any
 		err = json.NewDecoder(transferResponse.Body).Decode(&errorResponse)
@@ -578,5 +580,15 @@ outer:
 		return nil, errors.New(errorMessage)
 	}
 
-	return nil, nil
+	bodyBytes, err := io.ReadAll(transferResponse.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	ticketID := string(bodyBytes)
+	if ticketID == "" {
+		return nil, errors.New("received an empty ticket ID from server")
+	}
+
+	return &ticketID, nil
 }
