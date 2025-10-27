@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         environment: [sandbox, production]
+      max-parallel: 1
 
     name: Run tests on ${{ matrix.environment }}
 

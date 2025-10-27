@@ -28,12 +28,27 @@ func TestPollTicket_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.NoError(err, "NewMneeInstance should not return an error")
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
 
 	t.Log("Submitting async transfer to get a ticket ID...")
-	transferDTOs := []TransferMneeDTO{{Amount: 1000, Address: recipientAddress}}
-	ticketID, err := m.AsynchronousTransfer(context.Background(), []string{wif}, transferDTOs, false, nil, nil, nil)
-	assertions.NoError(err, "AsynchronousTransfer failed, cannot test PollTicket")
+
+	transferDTOs := []TransferMneeDTO{
+		{
+			Amount:  1000,
+			Address: recipientAddress,
+		},
+	}
+	wifs := []string{wif}
+
+	t.Log("Waiting 2 seconds for previous transactions to settle...")
+	time.Sleep(2 * time.Second)
+
+	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, false, nil, nil, nil)
+	if !assertions.NoError(err, "AsynchronousTransfer failed, cannot test PollTicket") {
+		return
+	}
 	assertions.NotNil(ticketID)
 
 	t.Logf("Got ticket ID: %s. Polling for status...", *ticketID)
@@ -43,7 +58,9 @@ func TestPollTicket_Integration(t *testing.T) {
 
 	ticket, err := m.PollTicket(ctx, *ticketID, 2*time.Second)
 
-	assertions.NoError(err, "PollTicket() should not return an error")
+	if !assertions.NoError(err, "PollTicket() should not return an error") {
+		return
+	}
 	assertions.NotNil(ticket, "Ticket should not be nil")
 	assertions.Equal(*ticketID, *ticket.ID, "Ticket ID in response should match")
 

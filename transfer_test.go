@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -27,7 +28,9 @@ func TestSynchronousTransfer_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.NoError(err, "NewMneeInstance should not return an error")
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
 
 	transferDTOs := []TransferMneeDTO{
 		{
@@ -40,7 +43,9 @@ func TestSynchronousTransfer_Integration(t *testing.T) {
 	t.Log("Attempting synchronous transfer...")
 	transferResponse, err := m.SynchronousTransfer(context.Background(), wifs, transferDTOs, false, nil)
 
-	assertions.NoError(err, "SynchronousTransfer() should not return an error")
+	if !assertions.NoError(err, "SynchronousTransfer() should not return an error") {
+		return
+	}
 	assertions.NotNil(transferResponse, "Transfer response should not be nil")
 	assertions.NotNil(transferResponse.Txid, "Response should have a Txid")
 	assertions.NotNil(transferResponse.Txhex, "Response should have a Txhex")
@@ -72,11 +77,15 @@ func TestSynchronousTransfer_WithTxos_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.NoError(err, "NewMneeInstance should not return an error")
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
 
 	t.Log("Attempting to pre-fetch UTXOs...")
 	mneeTxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})
-	assertions.NoError(err, "GetUnspentTxos() failed, cannot test withTxos")
+	if !assertions.NoError(err, "GetUnspentTxos() failed, cannot test withTxos") {
+		return
+	}
 	assertions.NotEmpty(mneeTxos, "Test address has no UTXOs to spend")
 	t.Logf("Successfully fetched %d UTXOs", len(mneeTxos))
 
@@ -92,7 +101,9 @@ func TestSynchronousTransfer_WithTxos_Integration(t *testing.T) {
 
 	transferResponse, err := m.SynchronousTransfer(context.Background(), wifs, transferDTOs, true, mneeTxos)
 
-	assertions.NoError(err, "SynchronousTransfer(withTxos=true) should not return an error")
+	if !assertions.NoError(err, "SynchronousTransfer(withTxos=true) should not return an error") {
+		return
+	}
 	assertions.NotNil(transferResponse, "Transfer response should not be nil")
 	assertions.NotNil(transferResponse.Txid, "Response should have a Txid")
 
@@ -118,7 +129,9 @@ func TestAsynchronousTransfer_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.NoError(err, "NewMneeInstance should not return an error")
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
 
 	transferDTOs := []TransferMneeDTO{
 		{
@@ -128,10 +141,15 @@ func TestAsynchronousTransfer_Integration(t *testing.T) {
 	}
 	wifs := []string{wif}
 
+	t.Log("Waiting 2 seconds for previous transactions to settle...")
+	time.Sleep(2 * time.Second)
+
 	t.Log("Attempting asynchronous transfer...")
 	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, false, nil, nil, nil)
 
-	assertions.NoError(err, "AsynchronousTransfer() should not return an error")
+	if !assertions.NoError(err, "AsynchronousTransfer() should not return an error") {
+		return
+	}
 	assertions.NotNil(ticketID, "Ticket ID should not be nil")
 	assertions.NotEmpty(*ticketID, "Ticket ID string should not be empty")
 
@@ -162,11 +180,18 @@ func TestAsynchronousTransfer_WithTxos_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.NoError(err, "NewMneeInstance should not return an error")
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
+
+	t.Log("Waiting 2 seconds for previous transactions to settle...")
+	time.Sleep(2 * time.Second)
 
 	t.Log("Attempting to pre-fetch UTXOs...")
 	mneeTxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})
-	assertions.NoError(err, "GetUnspentTxos() failed, cannot test withTxos")
+	if !assertions.NoError(err, "GetUnspentTxos() failed, cannot test withTxos") {
+		return
+	}
 	assertions.NotEmpty(mneeTxos, "Test address has no UTXOs to spend")
 	t.Logf("Successfully fetched %d UTXOs", len(mneeTxos))
 
@@ -182,7 +207,9 @@ func TestAsynchronousTransfer_WithTxos_Integration(t *testing.T) {
 
 	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, true, mneeTxos, nil, nil)
 
-	assertions.NoError(err, "AsynchronousTransfer(withTxos=true) should not return an error")
+	if !assertions.NoError(err, "AsynchronousTransfer(withTxos=true) should not return an error") {
+		return
+	}
 	assertions.NotNil(ticketID, "Ticket ID should not be nil")
 	assertions.NotEmpty(*ticketID, "Ticket ID string should not be empty")
 

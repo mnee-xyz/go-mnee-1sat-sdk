@@ -22,13 +22,17 @@ func TestGetUnspentTxos_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.NoError(err, "NewMneeInstance should not return an error")
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
 	assertions.NotNil(m, "MneeInstance should not be nil")
 
 	t.Log("Test Case 1: Fetching UTXOs for a known address...")
 
 	config, err := m.GetConfig(context.Background())
-	assertions.NoError(err, "Failed to get config, cannot proceed with UTXO test")
+	if !assertions.NoError(err, "Failed to get config, cannot proceed with UTXO test") {
+		return
+	}
 	assertions.NotNil(config)
 	assertions.NotNil(config.FeeAddress, "FeeAddress in config is nil")
 
@@ -36,7 +40,9 @@ func TestGetUnspentTxos_Integration(t *testing.T) {
 
 	txos, err := m.GetUnspentTxos(context.Background(), addressesToTest)
 
-	assertions.NoError(err, "GetUnspentTxos() should not return an error")
+	if !assertions.NoError(err, "GetUnspentTxos() should not return an error") {
+		return
+	}
 	assertions.NotNil(txos, "TXOs response should not be nil")
 
 	t.Logf("Found %d UTXOs for the fee address", len(txos))
@@ -50,7 +56,9 @@ func TestGetUnspentTxos_Integration(t *testing.T) {
 	emptyAddressesList := []string{}
 	txos, err = m.GetUnspentTxos(context.Background(), emptyAddressesList)
 
-	assertions.NoError(err, "GetUnspentTxos() with empty list should not error")
+	if !assertions.NoError(err, "GetUnspentTxos() with empty list should not error") {
+		return
+	}
 	assertions.NotNil(txos, "TXOs response should not be nil (should be '[]')")
 	assertions.Len(txos, 0, "TXOs list should be empty")
 
