@@ -58,7 +58,7 @@ func main() {
 }
 
 ```
-*(See `examples/config_example.go`)*
+*(See `examples/config/config_example.go`)*
 
 ### Check Balance
 
@@ -98,7 +98,7 @@ func main() {
 	}
 }
 ```
-*(See `examples/balance_example.go`)*
+*(See `examples/balance/balance_example.go`)*
 
 ### Transfer MNEE (Asynchronous with Polling)
 
@@ -153,7 +153,7 @@ func main() {
 	}
 }
 ```
-*(See `examples/transfer_example.go`)*
+*(See `examples/transfer/transfer_example.go`)*
 
 ## Key Features
 
