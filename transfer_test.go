@@ -142,7 +142,7 @@ func TestAsynchronousTransfer_Integration(t *testing.T) {
 	wifs := []string{wif}
 
 	t.Log("Waiting 2 seconds for previous transactions to settle...")
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	t.Log("Attempting asynchronous transfer...")
 	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, false, nil, nil, nil)
@@ -185,7 +185,7 @@ func TestAsynchronousTransfer_WithTxos_Integration(t *testing.T) {
 	}
 
 	t.Log("Waiting 2 seconds for previous transactions to settle...")
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	t.Log("Attempting to pre-fetch UTXOs...")
 	mneeTxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})

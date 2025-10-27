@@ -43,7 +43,7 @@ func TestPollTicket_Integration(t *testing.T) {
 	wifs := []string{wif}
 
 	t.Log("Waiting 2 seconds for previous transactions to settle...")
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, false, nil, nil, nil)
 	if !assertions.NoError(err, "AsynchronousTransfer failed, cannot test PollTicket") {
