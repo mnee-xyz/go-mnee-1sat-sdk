@@ -22,13 +22,13 @@ func TestGetBalances_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	assertions.NoError(err, "NewMneeInstance should not return an error")
 	assertions.NotNil(m, "MneeInstance should not be nil")
 
 	t.Log("Test Case 1: Fetching balances for known addresses...")
 
 	config, err := m.GetConfig(context.Background())
-	assertions.Nil(err, "Failed to get config, cannot proceed with balance test")
+	assertions.NoError(err, "Failed to get config, cannot proceed with balance test")
 	assertions.NotNil(config)
 	assertions.NotNil(config.FeeAddress, "FeeAddress in config is nil")
 
@@ -38,7 +38,7 @@ func TestGetBalances_Integration(t *testing.T) {
 
 	balances, err := m.GetBalances(context.Background(), addressesToTest)
 
-	assertions.Nil(err, "GetBalances() should not return an error")
+	assertions.NoError(err, "GetBalances() should not return an error")
 	assertions.NotNil(balances, "Balances response should not be nil")
 	assertions.Len(balances, 2, "Should get 2 balance results back")
 
@@ -63,7 +63,7 @@ func TestGetBalances_Integration(t *testing.T) {
 	emptyAddressesList := []string{}
 	balances, err = m.GetBalances(context.Background(), emptyAddressesList)
 
-	assertions.Nil(err, "GetBalances() with empty list should not error")
+	assertions.NoError(err, "GetBalances() with empty list should not error")
 	assertions.NotNil(balances, "Balances response should not be nil (should be '[]')")
 	assertions.Len(balances, 0, "Balances list should be empty")
 

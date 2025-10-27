@@ -27,7 +27,7 @@ func TestSynchronousTransfer_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	assertions.NoError(err, "NewMneeInstance should not return an error")
 
 	transferDTOs := []TransferMneeDTO{
 		{
@@ -40,7 +40,7 @@ func TestSynchronousTransfer_Integration(t *testing.T) {
 	t.Log("Attempting synchronous transfer...")
 	transferResponse, err := m.SynchronousTransfer(context.Background(), wifs, transferDTOs, false, nil)
 
-	assertions.Nil(err, "SynchronousTransfer() should not return an error")
+	assertions.NoError(err, "SynchronousTransfer() should not return an error")
 	assertions.NotNil(transferResponse, "Transfer response should not be nil")
 	assertions.NotNil(transferResponse.Txid, "Response should have a Txid")
 	assertions.NotNil(transferResponse.Txhex, "Response should have a Txhex")
@@ -72,11 +72,11 @@ func TestSynchronousTransfer_WithTxos_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	assertions.NoError(err, "NewMneeInstance should not return an error")
 
 	t.Log("Attempting to pre-fetch UTXOs...")
 	mneeTxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})
-	assertions.Nil(err, "GetUnspentTxos() failed, cannot test withTxos")
+	assertions.NoError(err, "GetUnspentTxos() failed, cannot test withTxos")
 	assertions.NotEmpty(mneeTxos, "Test address has no UTXOs to spend")
 	t.Logf("Successfully fetched %d UTXOs", len(mneeTxos))
 
@@ -92,7 +92,7 @@ func TestSynchronousTransfer_WithTxos_Integration(t *testing.T) {
 
 	transferResponse, err := m.SynchronousTransfer(context.Background(), wifs, transferDTOs, true, mneeTxos)
 
-	assertions.Nil(err, "SynchronousTransfer(withTxos=true) should not return an error")
+	assertions.NoError(err, "SynchronousTransfer(withTxos=true) should not return an error")
 	assertions.NotNil(transferResponse, "Transfer response should not be nil")
 	assertions.NotNil(transferResponse.Txid, "Response should have a Txid")
 
@@ -118,7 +118,7 @@ func TestAsynchronousTransfer_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	assertions.NoError(err, "NewMneeInstance should not return an error")
 
 	transferDTOs := []TransferMneeDTO{
 		{
@@ -131,7 +131,7 @@ func TestAsynchronousTransfer_Integration(t *testing.T) {
 	t.Log("Attempting asynchronous transfer...")
 	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, false, nil, nil, nil)
 
-	assertions.Nil(err, "AsynchronousTransfer() should not return an error")
+	assertions.NoError(err, "AsynchronousTransfer() should not return an error")
 	assertions.NotNil(ticketID, "Ticket ID should not be nil")
 	assertions.NotEmpty(*ticketID, "Ticket ID string should not be empty")
 
@@ -162,11 +162,11 @@ func TestAsynchronousTransfer_WithTxos_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	assertions.NoError(err, "NewMneeInstance should not return an error")
 
 	t.Log("Attempting to pre-fetch UTXOs...")
 	mneeTxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})
-	assertions.Nil(err, "GetUnspentTxos() failed, cannot test withTxos")
+	assertions.NoError(err, "GetUnspentTxos() failed, cannot test withTxos")
 	assertions.NotEmpty(mneeTxos, "Test address has no UTXOs to spend")
 	t.Logf("Successfully fetched %d UTXOs", len(mneeTxos))
 
@@ -182,7 +182,7 @@ func TestAsynchronousTransfer_WithTxos_Integration(t *testing.T) {
 
 	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, true, mneeTxos, nil, nil)
 
-	assertions.Nil(err, "AsynchronousTransfer(withTxos=true) should not return an error")
+	assertions.NoError(err, "AsynchronousTransfer(withTxos=true) should not return an error")
 	assertions.NotNil(ticketID, "Ticket ID should not be nil")
 	assertions.NotEmpty(*ticketID, "Ticket ID string should not be empty")
 

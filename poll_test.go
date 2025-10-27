@@ -28,12 +28,12 @@ func TestPollTicket_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	assertions.NoError(err, "NewMneeInstance should not return an error")
 
 	t.Log("Submitting async transfer to get a ticket ID...")
 	transferDTOs := []TransferMneeDTO{{Amount: 1000, Address: recipientAddress}}
 	ticketID, err := m.AsynchronousTransfer(context.Background(), []string{wif}, transferDTOs, false, nil, nil, nil)
-	assertions.Nil(err, "AsynchronousTransfer failed, cannot test PollTicket")
+	assertions.NoError(err, "AsynchronousTransfer failed, cannot test PollTicket")
 	assertions.NotNil(ticketID)
 
 	t.Logf("Got ticket ID: %s. Polling for status...", *ticketID)
@@ -43,7 +43,7 @@ func TestPollTicket_Integration(t *testing.T) {
 
 	ticket, err := m.PollTicket(ctx, *ticketID, 2*time.Second)
 
-	assertions.Nil(err, "PollTicket() should not return an error")
+	assertions.NoError(err, "PollTicket() should not return an error")
 	assertions.NotNil(ticket, "Ticket should not be nil")
 	assertions.Equal(*ticketID, *ticket.ID, "Ticket ID in response should match")
 

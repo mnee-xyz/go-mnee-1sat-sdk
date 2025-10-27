@@ -18,13 +18,13 @@ func TestGetConfig_Integration(t *testing.T) {
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
 
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	assertions.NoError(err, "NewMneeInstance should not return an error")
 	assertions.NotNil(m, "MneeInstance should not be nil")
 
 	t.Log("Calling GetConfig() against the sandbox API...")
 	config, err := m.GetConfig(context.Background())
 
-	assertions.Nil(err, "GetConfig() should not return an error")
+	assertions.NoError(err, "GetConfig() should not return an error")
 	assertions.NotNil(config, "Config response should not be nil")
 
 	assertions.NotNil(config.TokenId, "Config should have a TokenId")
