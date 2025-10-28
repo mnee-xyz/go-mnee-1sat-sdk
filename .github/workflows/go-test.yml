@@ -2,11 +2,23 @@ name: Go Integration Tests
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - tests
   workflow_dispatch:
 
 jobs:
   test:
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [sandbox, production]
+      max-parallel: 1
+
+    name: Run tests on ${{ matrix.environment }}
+
+    environment: ${{ matrix.environment }}
+
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +33,7 @@ jobs:
       - name: Run Go integration tests
         env:
           MNEE_API_KEY: ${{ secrets.MNEE_API_KEY }}
-          MNEE_TEST_ADDRESS: ${{ secrets.MNEE_TEST_ADDRESS }}
+          MNEE_TEST_ADDRESS: ${{ secrets.MNEE_TEST_ADDRESS }} 
           MNEE_WIF: ${{ secrets.MNEE_WIF }}
           MNEE_RECIPIENT_ADDRESS: ${{ secrets.MNEE_RECIPIENT_ADDRESS }}
-        run: go test -v ./...
+        run: go test -v -parallel=1 ./...

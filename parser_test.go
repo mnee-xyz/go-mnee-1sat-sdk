@@ -24,22 +24,30 @@ func TestIsMneeScript_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
 	assertions.NotNil(m, "MneeInstance should not be nil")
 
 	t.Log("Test Case 1: Checking a real, valid MNEE script...")
 
 	config, err := m.GetConfig(context.Background())
-	assertions.Nil(err, "Failed to get config, cannot proceed")
+	if !assertions.NoError(err, "Failed to get config, cannot proceed") {
+		return
+	}
 	assertions.NotNil(config.FeeAddress)
 
 	utxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})
-	assertions.Nil(err, "Failed to get UTXOs")
+	if !assertions.NoError(err, "Failed to get UTXOs") {
+		return
+	}
 	assertions.NotEmpty(utxos, "Fee address should have at least one UTXO to test")
 
 	base64Script := *utxos[0].Script
 	base64ScriptBytes, err := base64.StdEncoding.DecodeString(base64Script)
-	assertions.Nil(err, "Failed to parse script from Base64")
+	if !assertions.NoError(err, "Failed to parse script from Base64") {
+		return
+	}
 
 	s := script.NewFromBytes(base64ScriptBytes)
 	assertions.NotNil(s, "Failed to create script from bytes")
@@ -47,7 +55,9 @@ func TestIsMneeScript_Integration(t *testing.T) {
 	asmScript := s.ToASM()
 
 	isMnee, err := m.IsMneeScript(context.Background(), asmScript)
-	assertions.Nil(err, "IsMneeScript should not return an error")
+	if !assertions.NoError(err, "IsMneeScript should not return an error") {
+		return
+	}
 	assertions.True(isMnee, "A real UTXO from the feeAddress should be a valid MNEE script")
 
 	t.Log("✅ Correctly identified a valid MNEE script")

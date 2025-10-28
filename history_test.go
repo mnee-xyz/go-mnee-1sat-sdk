@@ -22,13 +22,17 @@ func TestGetSpecificTransactionHistory_Integration(t *testing.T) {
 	}
 
 	m, err := NewMneeInstance(EnvSandbox, apiKey)
-	assertions.Nil(err, "NewMneeInstance should not return an error")
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
 	assertions.NotNil(m, "MneeInstance should not be nil")
 
 	t.Log("Test Case: Fetching transaction history for a known address...")
 
 	config, err := m.GetConfig(context.Background())
-	assertions.Nil(err, "Failed to get config, cannot proceed with history test")
+	if !assertions.NoError(err, "Failed to get config, cannot proceed with history test") {
+		return
+	}
 	assertions.NotNil(config)
 	assertions.NotNil(config.FeeAddress, "FeeAddress in config is nil")
 
@@ -36,7 +40,9 @@ func TestGetSpecificTransactionHistory_Integration(t *testing.T) {
 
 	history, err := m.GetSpecificTransactionHistory(context.Background(), addressesToTest, 0, 10)
 
-	assertions.Nil(err, "GetSpecificTransactionHistory() should not return an error")
+	if !assertions.NoError(err, "GetSpecificTransactionHistory() should not return an error") {
+		return
+	}
 	assertions.NotNil(history, "History response should not be nil")
 
 	t.Logf("Found %d history items for the fee address", len(history))
