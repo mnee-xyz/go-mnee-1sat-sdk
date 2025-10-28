@@ -261,7 +261,11 @@ outer:
 
 	defer transferResponse.Body.Close()
 
-	if transferResponse.StatusCode > 299 {
+	if transferResponse.StatusCode == http.StatusForbidden {
+		return nil, errors.New("forbidden access to cosigner")
+	}
+
+	if transferResponse.StatusCode != http.StatusOK {
 		var errorResponse map[string]any
 		err = json.NewDecoder(transferResponse.Body).Decode(&errorResponse)
 		if err != nil {
@@ -564,7 +568,11 @@ outer:
 
 	defer transferResponse.Body.Close()
 
-	if transferResponse.StatusCode > 299 {
+	if transferResponse.StatusCode == http.StatusForbidden {
+		return nil, errors.New("forbidden access to cosigner")
+	}
+
+	if transferResponse.StatusCode != http.StatusOK {
 		var errorResponse map[string]any
 		err = json.NewDecoder(transferResponse.Body).Decode(&errorResponse)
 		if err != nil {

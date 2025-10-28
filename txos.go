@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -34,6 +36,25 @@ func (m *MNEE) GetUnspentTxos(ctx context.Context, addresses []string) ([]MneeTx
 
 	defer utxosResponse.Body.Close()
 
+	if utxosResponse.StatusCode == http.StatusForbidden {
+		return nil, errors.New("forbidden access to cosigner")
+	}
+
+	if utxosResponse.StatusCode != http.StatusOK {
+		var errorResponse map[string]any
+		err = json.NewDecoder(utxosResponse.Body).Decode(&errorResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		errorMessage, ok := errorResponse["message"].(string)
+		if !ok {
+			return nil, fmt.Errorf("status received from mnee-cosigner -> %d", utxosResponse.StatusCode)
+		}
+
+		return nil, errors.New(errorMessage)
+	}
+
 	err = json.NewDecoder(utxosResponse.Body).Decode(&txos)
 	if err != nil {
 		return nil, err
@@ -59,6 +80,25 @@ func (m *MNEE) GetTxo(ctx context.Context, outpoint string) (*MneeTxo, error) {
 	}
 
 	defer utxoResponse.Body.Close()
+
+	if utxoResponse.StatusCode == http.StatusForbidden {
+		return nil, errors.New("forbidden access to cosigner")
+	}
+
+	if utxoResponse.StatusCode != http.StatusOK {
+		var errorResponse map[string]any
+		err = json.NewDecoder(utxoResponse.Body).Decode(&errorResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		errorMessage, ok := errorResponse["message"].(string)
+		if !ok {
+			return nil, fmt.Errorf("status received from mnee-cosigner -> %d", utxoResponse.StatusCode)
+		}
+
+		return nil, errors.New(errorMessage)
+	}
 
 	var txo MneeTxo
 	err = json.NewDecoder(utxoResponse.Body).Decode(&txo)

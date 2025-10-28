@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -28,20 +29,27 @@ func (m *MNEE) PollTicket(ctx context.Context, ticketID string, pollingInterval 
 
 		defer ticketResponse.Body.Close()
 
-		if ticketResponse.StatusCode > 299 {
-			var errorResponse struct {
-				Message string `json:"message,omitempty"`
-			}
+		if ticketResponse.StatusCode == http.StatusForbidden {
+			return nil, errors.New("forbidden access to cosigner")
+		}
+
+		if ticketResponse.StatusCode != http.StatusOK {
+			var errorResponse map[string]any
 			err = json.NewDecoder(ticketResponse.Body).Decode(&errorResponse)
 			if err != nil {
 				return nil, err
 			}
 
-			if errorResponse.Message == "record not found" {
+			errorMessage, ok := errorResponse["message"].(string)
+			if !ok {
+				return nil, fmt.Errorf("status received from mnee-cosigner -> %d", ticketResponse.StatusCode)
+			}
+
+			if errorMessage == "record not found" {
 				time.Sleep(pollingInterval)
 				continue
 			} else {
-				return nil, errors.New(errorResponse.Message)
+				return nil, errors.New(errorMessage)
 			}
 		}
 

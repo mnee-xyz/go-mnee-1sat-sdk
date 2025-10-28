@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -33,6 +35,25 @@ func (m *MNEE) GetBalances(ctx context.Context, addresses []string) ([]BalanceDa
 	}
 
 	defer balancesResponse.Body.Close()
+
+	if balancesResponse.StatusCode == http.StatusForbidden {
+		return nil, errors.New("forbidden access to cosigner")
+	}
+
+	if balancesResponse.StatusCode != http.StatusOK {
+		var errorResponse map[string]any
+		err = json.NewDecoder(balancesResponse.Body).Decode(&errorResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		errorMessage, ok := errorResponse["message"].(string)
+		if !ok {
+			return nil, fmt.Errorf("status received from mnee-cosigner -> %d", balancesResponse.StatusCode)
+		}
+
+		return nil, errors.New(errorMessage)
+	}
 
 	err = json.NewDecoder(balancesResponse.Body).Decode(&balances)
 	if err != nil {

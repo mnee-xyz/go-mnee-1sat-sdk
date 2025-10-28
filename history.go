@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -31,6 +33,25 @@ func (m *MNEE) GetSpecificTransactionHistory(ctx context.Context, addresses []st
 	}
 
 	defer historyResponse.Body.Close()
+
+	if historyResponse.StatusCode == http.StatusForbidden {
+		return nil, errors.New("forbidden access to cosigner")
+	}
+
+	if historyResponse.StatusCode != http.StatusOK {
+		var errorResponse map[string]any
+		err = json.NewDecoder(historyResponse.Body).Decode(&errorResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		errorMessage, ok := errorResponse["message"].(string)
+		if !ok {
+			return nil, fmt.Errorf("status received from mnee-cosigner -> %d", historyResponse.StatusCode)
+		}
+
+		return nil, errors.New(errorMessage)
+	}
 
 	var history []TransactionHistoryDTO
 	err = json.NewDecoder(historyResponse.Body).Decode(&history)
