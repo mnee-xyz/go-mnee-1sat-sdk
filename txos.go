@@ -69,7 +69,7 @@ func (m *MNEE) GetTxo(ctx context.Context, outpoint string) (*MneeTxo, error) {
 
 	utxoRequest, err := http.NewRequest(
 		http.MethodGet,
-		(m.mneeURL + "/v1/txo/" + outpoint + "?auth_token=" + m.mneeToken),
+		(m.mneeURL + "/v2/txos/" + outpoint + "?auth_token=" + m.mneeToken),
 		nil,
 	)
 	if err != nil {
