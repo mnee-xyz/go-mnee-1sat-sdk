@@ -37,10 +37,6 @@ func main() {
 		fmt.Printf("✅ Synchronous Transfer Submitted! Txid: %s\n", *syncResponse.Txid)
 	}
 
-	// Wait a bit before next transfer to avoid double-spend issues in example
-	fmt.Println("\nWaiting 5 seconds...")
-	time.Sleep(5 * time.Second)
-
 	// --- Example 2: Asynchronous Transfer & Polling ---
 	fmt.Println("Attempting Asynchronous Transfer...")
 	// You can add callbackURL and callbackSecret here if needed

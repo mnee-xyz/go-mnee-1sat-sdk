@@ -43,7 +43,10 @@ func TestIsMneeScript_Integration(t *testing.T) {
 	if !assertions.NoError(err, "Failed to get UTXOs") {
 		return
 	}
-	assertions.NotEmpty(utxos, "Fee address should have at least one UTXO to test")
+
+	if !assertions.NotEmpty(utxos, "Test address should have at least one UTXO to test") {
+		return
+	}
 
 	base64Script := *utxos[0].Script
 	base64ScriptBytes, err := base64.StdEncoding.DecodeString(base64Script)
