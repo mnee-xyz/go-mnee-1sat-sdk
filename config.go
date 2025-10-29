@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+// GetConfig fetches the current MNEE system configuration from the API.
+// It caches the config internally for 1 hour to reduce API calls.
 func (m *MNEE) GetConfig(ctx context.Context) (*SystemConfig, error) {
 
 	m.mutex.Lock()
@@ -47,7 +49,7 @@ func (m *MNEE) GetConfig(ctx context.Context) (*SystemConfig, error) {
 	defer configResponse.Body.Close()
 
 	if configResponse.StatusCode == http.StatusForbidden {
-		return nil, errors.New("forbidden access to cosigner")
+		return nil, ErrForbidden
 	}
 
 	if configResponse.StatusCode != http.StatusOK {

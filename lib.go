@@ -1,17 +1,20 @@
 package mnee
 
 import (
-	"errors"
 	"net/http"
 	"sync"
 	"time"
 )
 
 const (
-	EnvMain    string = "MAIN"
+	// EnvMain specifies the MNEE production environment URL.
+	EnvMain string = "MAIN"
+	// EnvSandbox specifies the MNEE sandbox environment URL.
 	EnvSandbox string = "SANDBOX"
 )
 
+// MNEE provides the client for interacting with the MNEE API.
+// It holds the API configuration, HTTP client, and caches the system config.
 type MNEE struct {
 	mneeURL      string
 	mneeToken    string
@@ -21,6 +24,10 @@ type MNEE struct {
 	refreshTimer <-chan time.Time
 }
 
+// NewMneeInstance creates a new MNEE client instance.
+//
+// It requires an environment (`EnvMain` or `EnvSandbox`) and an authToken.
+// The client automatically fetches and caches the MNEE system configuration.
 func NewMneeInstance(environment string, authToken string) (*MNEE, error) {
 
 	var mnee MNEE
@@ -40,7 +47,7 @@ func NewMneeInstance(environment string, authToken string) (*MNEE, error) {
 		}
 
 	default:
-		return nil, errors.New("invalid environment")
+		return nil, ErrInvalidEnvironment
 	}
 
 	mnee.mutex = new(sync.Mutex)

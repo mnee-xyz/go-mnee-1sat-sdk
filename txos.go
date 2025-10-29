@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+// GetUnspentTxos fetches all MNEE UTXOs for a given list of addresses.
 func (m *MNEE) GetUnspentTxos(ctx context.Context, addresses []string) ([]MneeTxo, error) {
 
 	addressesBuffer, err := json.Marshal(&addresses)
@@ -37,7 +38,7 @@ func (m *MNEE) GetUnspentTxos(ctx context.Context, addresses []string) ([]MneeTx
 	defer utxosResponse.Body.Close()
 
 	if utxosResponse.StatusCode == http.StatusForbidden {
-		return nil, errors.New("forbidden access to cosigner")
+		return nil, ErrForbidden
 	}
 
 	if utxosResponse.StatusCode != http.StatusOK {
@@ -63,6 +64,7 @@ func (m *MNEE) GetUnspentTxos(ctx context.Context, addresses []string) ([]MneeTx
 	return txos, nil
 }
 
+// GetTxo fetches a single MNEE UTXO by its outpoint string (e.g., "txid_vout").
 func (m *MNEE) GetTxo(ctx context.Context, outpoint string) (*MneeTxo, error) {
 
 	utxoRequest, err := http.NewRequest(
@@ -82,7 +84,7 @@ func (m *MNEE) GetTxo(ctx context.Context, outpoint string) (*MneeTxo, error) {
 	defer utxoResponse.Body.Close()
 
 	if utxoResponse.StatusCode == http.StatusForbidden {
-		return nil, errors.New("forbidden access to cosigner")
+		return nil, ErrForbidden
 	}
 
 	if utxoResponse.StatusCode != http.StatusOK {

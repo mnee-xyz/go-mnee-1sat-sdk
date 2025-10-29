@@ -9,9 +9,10 @@ import (
 	"github.com/bsv-blockchain/go-sdk/script"
 )
 
+// IsMneeScript validates if a given ASM script is a valid MNEE token script.
+// It checks the script structure, BSV-20 inscription, locking script,
+// and token details against the current MNEE system configuration.
 // 'asmScript' should be the ASM script format of every output of a transaction.
-//
-// 'config' is the MNEE config provided by the Cosigner.
 func (m *MNEE) IsMneeScript(ctx context.Context, asmScript string) (bool, error) {
 
 	config, err := m.GetConfig(ctx)
