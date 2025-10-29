@@ -64,7 +64,7 @@ func (m *MNEE) GetUnspentTxos(ctx context.Context, addresses []string) ([]MneeTx
 	return txos, nil
 }
 
-// GetUnspentTxosWithLimit fetches MNEE UTXOs for a given list of addresses with pagination.
+// GetPaginatedUnspentTxos fetches MNEE UTXOs for a given list of addresses with pagination.
 func (m *MNEE) GetPaginatedUnspentTxos(ctx context.Context, addresses []string, page int, size int) ([]MneeTxo, error) {
 
 	addressesBuffer, err := json.Marshal(&addresses)
