@@ -10,7 +10,7 @@ import (
 )
 
 // IsMneeScript validates if a given ASM script is a valid MNEE token script.
-// It checks the script structure, BSV-20 inscription, locking script,
+// It checks the script structure, MNEE-1SAT inscription, locking script,
 // and token details against the current MNEE system configuration.
 // 'asmScript' should be the ASM script format of every output of a transaction.
 func (m *MNEE) IsMneeScript(ctx context.Context, asmScript string) (bool, error) {

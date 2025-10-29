@@ -33,7 +33,7 @@ var ErrInvalidPublicKeyHash = errors.New("invalid public key hash")
 // API returns a 200 OK but the response body (ticket ID) is empty.
 var ErrReceivedEmptyTicketID = errors.New("received an empty ticket ID from server")
 
-// TokenOperation defines the type of BSV-20 operation.
+// TokenOperation defines the type of MNEE-1SAT operation.
 type TokenOperation string
 
 // TokenProtocol defines the token protocol name.
@@ -43,9 +43,9 @@ type TokenProtocol string
 type TicketStatus string
 
 const (
-	// TRANSFER is the "transfer" operation for BSV-20.
+	// TRANSFER is the "transfer" operation for MNEE-1SAT.
 	TRANSFER TokenOperation = "transfer"
-	// DEPLOY_MINT is the "deploy+mint" operation for BSV-20.
+	// DEPLOY_MINT is the "deploy+mint" operation for MNEE-1SAT.
 	DEPLOY_MINT TokenOperation = "deploy+mint"
 )
 
@@ -180,7 +180,7 @@ type BalanceDataDTO struct {
 	Address  *string `json:"address"`
 }
 
-// BaseTokenInscription defines the common fields for BSV-20 inscriptions.
+// BaseTokenInscription defines the common fields for MNEE-1SAT inscriptions.
 type BaseTokenInscription struct {
 	Protocol  TokenProtocol  `json:"p"`
 	Amount    string         `json:"amt"`
@@ -195,14 +195,14 @@ type TokenMetadata struct {
 	Version       string `json:"version"`
 }
 
-// DeployChainInscription represents a "deploy+mint" BSV-20 inscription.
+// DeployChainInscription represents a "deploy+mint" MNEE-1SAT inscription.
 type DeployChainInscription struct {
 	BaseTokenInscription
 	TokenID  string         `json:"id"`
 	Metadata *TokenMetadata `json:"metadata,omitempty"`
 }
 
-// TransferTokenInscription represents a "transfer" BSV-20 inscription.
+// TransferTokenInscription represents a "transfer" MNEE-1SAT inscription.
 type TransferTokenInscription struct {
 	BaseTokenInscription
 	TokenID string `json:"id"`
