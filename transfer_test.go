@@ -27,7 +27,9 @@ func TestSynchronousTransfer_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_RECIPIENT_ADDRESS not set")
 	}
 
-	m, err := NewMneeInstance(EnvSandbox, apiKey)
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
 	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
 		return
 	}
@@ -76,7 +78,9 @@ func TestSynchronousTransfer_WithTxos_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_RECIPIENT_ADDRESS not set")
 	}
 
-	m, err := NewMneeInstance(EnvSandbox, apiKey)
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
 	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
 		return
 	}
@@ -128,7 +132,9 @@ func TestAsynchronousTransfer_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_RECIPIENT_ADDRESS not set")
 	}
 
-	m, err := NewMneeInstance(EnvSandbox, apiKey)
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
 	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
 		return
 	}
@@ -179,7 +185,9 @@ func TestAsynchronousTransfer_WithTxos_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_RECIPIENT_ADDRESS not set")
 	}
 
-	m, err := NewMneeInstance(EnvSandbox, apiKey)
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
 	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
 		return
 	}

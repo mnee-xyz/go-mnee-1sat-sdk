@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+// PollTicket polls the MNEE API for the status of an asynchronous transfer ticket.
+// It will continue to poll at the specified `pollingInterval` until the context
+// is canceled or the ticket status is no longer "record not found".
+// It returns the final Ticket details.
 func (m *MNEE) PollTicket(ctx context.Context, ticketID string, pollingInterval time.Duration) (*Ticket, error) {
 
 	for {
@@ -30,7 +34,7 @@ func (m *MNEE) PollTicket(ctx context.Context, ticketID string, pollingInterval 
 		defer ticketResponse.Body.Close()
 
 		if ticketResponse.StatusCode == http.StatusForbidden {
-			return nil, errors.New("forbidden access to cosigner")
+			return nil, ErrForbidden
 		}
 
 		if ticketResponse.StatusCode != http.StatusOK {
@@ -46,8 +50,12 @@ func (m *MNEE) PollTicket(ctx context.Context, ticketID string, pollingInterval 
 			}
 
 			if errorMessage == "record not found" {
-				time.Sleep(pollingInterval)
-				continue
+				select {
+				case <-time.After(pollingInterval):
+					continue
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
 			} else {
 				return nil, errors.New(errorMessage)
 			}

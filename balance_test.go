@@ -21,7 +21,9 @@ func TestGetBalances_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_TEST_ADDRESS environment variable not set")
 	}
 
-	m, err := NewMneeInstance(EnvSandbox, apiKey)
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
 	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
 		return
 	}

@@ -10,6 +10,9 @@ import (
 	"strconv"
 )
 
+// GetSpecificTransactionHistory fetches the paginated transaction history for a list of addresses.
+// `from` is the starting index (0 for the beginning).
+// `limit` is the maximum number of items to return.
 func (m *MNEE) GetSpecificTransactionHistory(ctx context.Context, addresses []string, from int, limit int) ([]TransactionHistoryDTO, error) {
 
 	addressesBuffer, err := json.Marshal(&addresses)
@@ -35,7 +38,7 @@ func (m *MNEE) GetSpecificTransactionHistory(ctx context.Context, addresses []st
 	defer historyResponse.Body.Close()
 
 	if historyResponse.StatusCode == http.StatusForbidden {
-		return nil, errors.New("forbidden access to cosigner")
+		return nil, ErrForbidden
 	}
 
 	if historyResponse.StatusCode != http.StatusOK {

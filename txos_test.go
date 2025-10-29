@@ -21,7 +21,9 @@ func TestGetUnspentTxos_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_TEST_ADDRESS environment variable not set")
 	}
 
-	m, err := NewMneeInstance(EnvSandbox, apiKey)
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
 	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
 		return
 	}
@@ -63,4 +65,57 @@ func TestGetUnspentTxos_Integration(t *testing.T) {
 	assertions.Len(txos, 0, "TXOs list should be empty")
 
 	t.Log("✅ Successfully handled empty address list (returned '[]')")
+}
+
+func TestGetTxo_Integration(t *testing.T) {
+	assertions := assert.New(t)
+
+	apiKey := os.Getenv("MNEE_API_KEY")
+	if apiKey == "" {
+		t.Skip("Skipping integration test: MNEE_API_KEY environment variable not set")
+	}
+
+	testAddress := os.Getenv("MNEE_TEST_ADDRESS")
+	if testAddress == "" {
+		t.Skip("Skipping integration test: MNEE_TEST_ADDRESS environment variable not set")
+	}
+
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
+	assertions.NotNil(m, "MneeInstance should not be nil")
+
+	t.Log("Fetching UTXOs to get a valid outpoint...")
+	utxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})
+	if !assertions.NoError(err, "GetUnspentTxos() failed") {
+		return
+	}
+	if !assertions.NotEmpty(utxos, "MNEE_TEST_ADDRESS has no UTXOs, cannot test GetTxo") {
+		return
+	}
+
+	outpointToTest := *utxos[0].Outpoint
+	expectedTxid := *utxos[0].Txid
+	t.Logf("Got outpoint to test: %s", outpointToTest)
+
+	txo, err := m.GetTxo(context.Background(), outpointToTest)
+
+	if !assertions.NoError(err, "GetTxo() should not return an error") {
+		return
+	}
+	if !assertions.NotNil(txo, "TXO response should not be nil") {
+		return
+	}
+
+	assertions.NotNil(txo.Txid, "Returned TXO should have a Txid")
+	assertions.Equal(expectedTxid, *txo.Txid, "Returned TXO's txid should match the one from GetUnspentTxos")
+	assertions.Equal(outpointToTest, *txo.Outpoint, "Returned TXO's outpoint should match the requested outpoint")
+	assertions.NotNil(txo.Data, "Returned TXO should have Data")
+	assertions.NotNil(txo.Data.Bsv21, "Returned TXO Data should have Bsv21 info")
+	assertions.Greater(txo.Data.Bsv21.Amt, uint64(0), "Returned TXO should have a positive amount")
+
+	t.Log("✅ Successfully fetched single TXO by outpoint")
 }

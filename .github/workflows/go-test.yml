@@ -32,6 +32,7 @@ jobs:
 
       - name: Run Go integration tests
         env:
+          MNEE_TEST_ENV: ${{ matrix.environment }}
           MNEE_API_KEY: ${{ secrets.MNEE_API_KEY }}
           MNEE_TEST_ADDRESS: ${{ secrets.MNEE_TEST_ADDRESS }} 
           MNEE_WIF: ${{ secrets.MNEE_WIF }}

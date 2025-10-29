@@ -9,6 +9,8 @@ import (
 	"net/http"
 )
 
+// GetBalances fetches the MNEE balance for a list of addresses.
+// It returns a slice of BalanceDataDTO, one for each address.
 func (m *MNEE) GetBalances(ctx context.Context, addresses []string) ([]BalanceDataDTO, error) {
 
 	addressesBuffer, err := json.Marshal(&addresses)
@@ -37,7 +39,7 @@ func (m *MNEE) GetBalances(ctx context.Context, addresses []string) ([]BalanceDa
 	defer balancesResponse.Body.Close()
 
 	if balancesResponse.StatusCode == http.StatusForbidden {
-		return nil, errors.New("forbidden access to cosigner")
+		return nil, ErrForbidden
 	}
 
 	if balancesResponse.StatusCode != http.StatusOK {

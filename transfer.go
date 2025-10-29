@@ -19,6 +19,13 @@ import (
 	"github.com/bsv-blockchain/go-sdk/transaction/template/p2pkh"
 )
 
+// SynchronousTransfer builds, signs, and submits a MNEE transfer transaction,
+// waiting for the final cosigned transaction response from the MNEE API.
+//
+// It automatically selects UTXOs unless `withTxos` is true and `mneeTxos` are provided.
+// It calculates and includes the required MNEE fee based on the system config.
+// Returns the final transaction details (Txid, Txhex) upon success.
+// Use this function when you need immediate confirmation that the cosigner accepted the transaction.
 func (m *MNEE) SynchronousTransfer(ctx context.Context, wifs []string, mneeTransferDTO []TransferMneeDTO, withTxos bool,
 	mneeTxos []MneeTxo) (*TransferResponseDTO, error) {
 
@@ -45,7 +52,7 @@ func (m *MNEE) SynchronousTransfer(ctx context.Context, wifs []string, mneeTrans
 	}
 
 	if config.Approver == nil || config.FeeAddress == nil || config.Fees == nil || config.TokenId == nil {
-		return nil, errors.New("invalid config")
+		return nil, ErrInvalidConfig
 	}
 
 	approverPubKey, err := primitives.PublicKeyFromString(*config.Approver)
@@ -57,7 +64,7 @@ func (m *MNEE) SynchronousTransfer(ctx context.Context, wifs []string, mneeTrans
 	var totalTransferAmt uint64
 	for _, dto := range mneeTransferDTO {
 		if dto.Amount == 0 {
-			return nil, errors.New("transfer amount must be greater than 0")
+			return nil, ErrTransferAmountGreaterThan0
 		}
 
 		address, err := script.NewAddressFromString(dto.Address)
@@ -236,7 +243,7 @@ outer:
 	}
 
 	if totalInputAmount < totalTransferAmt {
-		return nil, errors.New("insufficient mnee balance")
+		return nil, ErrInsufficientMneeBalance
 	}
 
 	err = mneeTransaction.Sign()
@@ -262,7 +269,7 @@ outer:
 	defer transferResponse.Body.Close()
 
 	if transferResponse.StatusCode == http.StatusForbidden {
-		return nil, errors.New("forbidden access to cosigner")
+		return nil, ErrForbidden
 	}
 
 	if transferResponse.StatusCode != http.StatusOK {
@@ -315,6 +322,14 @@ outer:
 	}
 }
 
+// AsynchronousTransfer builds, signs, and submits a MNEE transfer transaction,
+// returning a ticket ID immediately without waiting for cosigner processing.
+//
+// It automatically selects UTXOs unless `withTxos` is true and `mneeTxos` are provided.
+// It calculates and includes the required MNEE fee based on the system config.
+// The status of the transfer can be tracked using the returned ticket ID with PollTicket
+// or via webhooks (if callbackURL is provided).
+// Use this function for non-blocking operations.
 func (m *MNEE) AsynchronousTransfer(ctx context.Context, wifs []string, mneeTransferDTO []TransferMneeDTO, withTxos bool,
 	mneeTxos []MneeTxo, callbackURL *string, callbackSecret *string) (*string, error) {
 
@@ -341,7 +356,7 @@ func (m *MNEE) AsynchronousTransfer(ctx context.Context, wifs []string, mneeTran
 	}
 
 	if config.Approver == nil || config.FeeAddress == nil || config.Fees == nil || config.TokenId == nil {
-		return nil, errors.New("invalid config")
+		return nil, ErrInvalidConfig
 	}
 
 	approverPubKey, err := primitives.PublicKeyFromString(*config.Approver)
@@ -353,7 +368,7 @@ func (m *MNEE) AsynchronousTransfer(ctx context.Context, wifs []string, mneeTran
 	var totalTransferAmt uint64
 	for _, dto := range mneeTransferDTO {
 		if dto.Amount == 0 {
-			return nil, errors.New("transfer amount must be greater than 0")
+			return nil, ErrTransferAmountGreaterThan0
 		}
 
 		address, err := script.NewAddressFromString(dto.Address)
@@ -532,7 +547,7 @@ outer:
 	}
 
 	if totalInputAmount < totalTransferAmt {
-		return nil, errors.New("insufficient mnee balance")
+		return nil, ErrInsufficientMneeBalance
 	}
 
 	err = mneeTransaction.Sign()
@@ -569,7 +584,7 @@ outer:
 	defer transferResponse.Body.Close()
 
 	if transferResponse.StatusCode == http.StatusForbidden {
-		return nil, errors.New("forbidden access to cosigner")
+		return nil, ErrForbidden
 	}
 
 	if transferResponse.StatusCode != http.StatusOK {
@@ -593,7 +608,7 @@ outer:
 	}
 
 	if len(bodyBytes) == 0 {
-		return nil, errors.New("received an empty ticket ID from server")
+		return nil, ErrReceivedEmptyTicketID
 	}
 
 	var ticketID string = string(bodyBytes)

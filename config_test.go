@@ -3,10 +3,25 @@ package mnee
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func getTestEnvironment(t *testing.T) string {
+	testEnvStr := os.Getenv("MNEE_TEST_ENV")
+	var targetEnv string
+
+	if strings.ToLower(testEnvStr) == "production" {
+		targetEnv = EnvMain
+		t.Log("Targeting PRODUCTION environment for tests")
+	} else {
+		targetEnv = EnvSandbox
+		t.Log("Targeting SANDBOX environment for tests")
+	}
+	return targetEnv
+}
 
 func TestGetConfig_Integration(t *testing.T) {
 	assertions := assert.New(t)
@@ -16,7 +31,9 @@ func TestGetConfig_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_API_KEY environment variable not set")
 	}
 
-	m, err := NewMneeInstance(EnvSandbox, apiKey)
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
 
 	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
 		return

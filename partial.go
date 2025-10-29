@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"slices"
 
 	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
@@ -14,6 +13,8 @@ import (
 	"github.com/bsv-blockchain/go-sdk/transaction/template/p2pkh"
 )
 
+// PartialSign builds a MNEE transfer transaction and signs it *only* with the
+// WIFs provided. It returns the partially signed transaction as a hex string.
 func (m *MNEE) PartialSign(ctx context.Context, wifs []string, mneeTransferDTO []TransferMneeDTO, withTxos bool,
 	mneeTxos []MneeTxo) (*string, error) {
 
@@ -40,7 +41,7 @@ func (m *MNEE) PartialSign(ctx context.Context, wifs []string, mneeTransferDTO [
 	}
 
 	if config.Approver == nil || config.FeeAddress == nil || config.Fees == nil || config.TokenId == nil {
-		return nil, errors.New("invalid config")
+		return nil, ErrInvalidConfig
 	}
 
 	approverPubKey, err := primitives.PublicKeyFromString(*config.Approver)
@@ -52,7 +53,7 @@ func (m *MNEE) PartialSign(ctx context.Context, wifs []string, mneeTransferDTO [
 	var totalTransferAmt uint64
 	for _, dto := range mneeTransferDTO {
 		if dto.Amount == 0 {
-			return nil, errors.New("transfer amount must be greater than 0")
+			return nil, ErrTransferAmountGreaterThan0
 		}
 
 		address, err := script.NewAddressFromString(dto.Address)
@@ -231,7 +232,7 @@ outer:
 	}
 
 	if totalInputAmount < totalTransferAmt {
-		return nil, errors.New("insufficient mnee balance")
+		return nil, ErrInsufficientMneeBalance
 	}
 
 	err = mneeTransaction.Sign()
