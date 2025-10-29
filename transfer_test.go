@@ -147,15 +147,15 @@ func TestAsynchronousTransfer_Integration(t *testing.T) {
 	}
 	wifs := []string{wif}
 
-	t.Log("Waiting 2 seconds for previous transactions to settle...")
-	time.Sleep(5 * time.Second)
-
 	t.Log("Attempting asynchronous transfer...")
 	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, false, nil, nil, nil)
-
 	if !assertions.NoError(err, "AsynchronousTransfer() should not return an error") {
 		return
 	}
+
+	t.Log("Waiting 2 seconds for previous transactions to settle...")
+	time.Sleep(5 * time.Second)
+
 	assertions.NotNil(ticketID, "Ticket ID should not be nil")
 	assertions.NotEmpty(*ticketID, "Ticket ID string should not be empty")
 
@@ -192,9 +192,6 @@ func TestAsynchronousTransfer_WithTxos_Integration(t *testing.T) {
 		return
 	}
 
-	t.Log("Waiting 2 seconds for previous transactions to settle...")
-	time.Sleep(5 * time.Second)
-
 	t.Log("Attempting to pre-fetch UTXOs...")
 	mneeTxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})
 	if !assertions.NoError(err, "GetUnspentTxos() failed, cannot test withTxos") {
@@ -212,12 +209,14 @@ func TestAsynchronousTransfer_WithTxos_Integration(t *testing.T) {
 	wifs := []string{wif}
 
 	t.Log("Attempting asynchronous transfer with withTxos = true...")
-
 	ticketID, err := m.AsynchronousTransfer(context.Background(), wifs, transferDTOs, true, mneeTxos, nil, nil)
-
 	if !assertions.NoError(err, "AsynchronousTransfer(withTxos=true) should not return an error") {
 		return
 	}
+
+	t.Log("Waiting 2 seconds for previous transactions to settle...")
+	time.Sleep(5 * time.Second)
+
 	assertions.NotNil(ticketID, "Ticket ID should not be nil")
 	assertions.NotEmpty(*ticketID, "Ticket ID string should not be empty")
 
