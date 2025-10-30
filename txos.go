@@ -75,7 +75,7 @@ func (m *MNEE) GetPaginatedUnspentTxos(ctx context.Context, addresses []string, 
 	utxosRequest, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		(m.mneeURL + "/v1/utxos?page=" + fmt.Sprintf("%d", page) + "&size=" + fmt.Sprintf("%d", size) + "&auth_token=" + m.mneeToken),
+		(m.mneeURL + "/v2/utxos?page=" + fmt.Sprintf("%d", page) + "&size=" + fmt.Sprintf("%d", size) + "&auth_token=" + m.mneeToken),
 		bytes.NewBuffer(addressesBuffer),
 	)
 	if err != nil {

@@ -10,12 +10,13 @@ import (
 	"net/http"
 )
 
+// GetMNEETxHex fetches a MNEE transaction by its TXID and returns its full hex.
 func (m *MNEE) GetMNEETxHex(ctx context.Context, txid string) (*string, error) {
 
 	mneeHexRequest, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		(m.mneeURL + "/v2/tx/" + txid + "?auth_token=" + m.mneeToken),
+		(m.mneeURL + "/v1/tx/" + txid + "?auth_token=" + m.mneeToken),
 		nil,
 	)
 	if err != nil {
@@ -53,7 +54,7 @@ func (m *MNEE) GetMNEETxHex(ctx context.Context, txid string) (*string, error) {
 	var mneeHexBody struct {
 		RawTx *string `json:"rawtx"`
 	}
-	err = json.NewDecoder(mneeHexRequest.Body).Decode(&mneeHexBody)
+	err = json.NewDecoder(mneeHexResponse.Body).Decode(&mneeHexBody)
 	if err != nil {
 		return nil, err
 	}

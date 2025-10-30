@@ -67,6 +67,53 @@ func TestGetUnspentTxos_Integration(t *testing.T) {
 	t.Log("✅ Successfully handled empty address list (returned '[]')")
 }
 
+func TestGetPaginatedUnspentTxos_Integration(t *testing.T) {
+	assertions := assert.New(t)
+
+	apiKey := os.Getenv("MNEE_API_KEY")
+	if apiKey == "" {
+		t.Skip("Skipping integration test: MNEE_API_KEY environment variable not set")
+	}
+	testAddress := os.Getenv("MNEE_TEST_ADDRESS")
+	if testAddress == "" {
+		t.Skip("Skipping integration test: MNEE_TEST_ADDRESS environment variable not set")
+	}
+	targetEnv := getTestEnvironment(t)
+
+	m, err := NewMneeInstance(targetEnv, apiKey)
+	if !assertions.NoError(err, "NewMneeInstance should not return an error") {
+		return
+	}
+
+	addresses := []string{testAddress}
+
+	t.Log("Fetching Page 1, Size 2...")
+	txosPage1, err := m.GetPaginatedUnspentTxos(context.Background(), addresses, 1, 2)
+
+	if !assertions.NoError(err, "GetPaginatedUnspentTxos (Page 1) should not return an error") {
+		return
+	}
+	assertions.NotNil(txosPage1, "TXOs (Page 1) response should not be nil")
+	assertions.LessOrEqual(len(txosPage1), 2, "Should return at most 2 UTXOs for size=2")
+
+	t.Log("Fetching Page 2, Size 2...")
+	txosPage2, err := m.GetPaginatedUnspentTxos(context.Background(), addresses, 2, 2)
+	if !assertions.NoError(err, "GetPaginatedUnspentTxos (Page 2) should not return an error") {
+		return
+	}
+	assertions.NotNil(txosPage2, "TXOs (Page 2) response should not be nil")
+	assertions.LessOrEqual(len(txosPage2), 2, "Should return at most 2 UTXOs for size=2")
+
+	if len(txosPage1) > 0 && len(txosPage2) > 0 {
+		assertions.NotEqual(txosPage1[0].Outpoint, txosPage2[0].Outpoint, "Page 1 and Page 2 should not return the same UTXOs")
+		t.Log("✅ Page 1 and Page 2 returned different UTXOs.")
+	} else if len(txosPage1) == 0 && len(txosPage2) == 0 {
+		t.Log("Test address has no UTXOs, pagination could not be fully verified.")
+	} else {
+		t.Log("✅ Pagination test ran (one page had results).")
+	}
+}
+
 func TestGetTxo_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
