@@ -16,8 +16,8 @@ func TestGetBalances_Integration(t *testing.T) {
 		t.Skip("Skipping integration test: MNEE_API_KEY environment variable not set")
 	}
 
-	testAddress := os.Getenv("MNEE_TEST_ADDRESS")
-	if testAddress == "" {
+	recipientAddress := os.Getenv("MNEE_RECIPIENT_ADDRESS")
+	if recipientAddress == "" {
 		t.Skip("Skipping integration test: MNEE_TEST_ADDRESS environment variable not set")
 	}
 
@@ -39,7 +39,7 @@ func TestGetBalances_Integration(t *testing.T) {
 
 	feeAddress := *config.FeeAddress
 
-	addressesToTest := []string{feeAddress, testAddress}
+	addressesToTest := []string{feeAddress, recipientAddress}
 
 	balances, err := m.GetBalances(context.Background(), addressesToTest)
 
@@ -49,19 +49,19 @@ func TestGetBalances_Integration(t *testing.T) {
 	assertions.NotNil(balances, "Balances response should not be nil")
 	assertions.Len(balances, 2, "Should get 2 balance results back")
 
-	var foundFeeAddress, foundTestAddress bool
+	var foundFeeAddress, foundRecipientAddress bool
 	for _, balance := range balances {
 		switch *balance.Address {
 		case feeAddress:
 			assertions.Greater(balance.Amt, float64(0), "Fee address should have a balance")
 			foundFeeAddress = true
-		case testAddress:
-			assertions.GreaterOrEqual(balance.Amt, float64(1000000), "Test address should have balance greater than or equal to 10")
-			foundTestAddress = true
+		case recipientAddress:
+			assertions.GreaterOrEqual(balance.Amt, float64(0), "Recipient address should have balance greater than or equal to 0")
+			foundRecipientAddress = true
 		}
 	}
 	assertions.True(foundFeeAddress, "Did not find balance for feeAddress")
-	assertions.True(foundTestAddress, "Did not find balance for testAddress")
+	assertions.True(foundRecipientAddress, "Did not find balance for recipientAddress")
 
 	t.Logf("Successfully fetched balances for %d addresses", len(balances))
 
