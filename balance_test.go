@@ -56,7 +56,7 @@ func TestGetBalances_Integration(t *testing.T) {
 			assertions.Greater(balance.Amt, float64(0), "Fee address should have a balance")
 			foundFeeAddress = true
 		case recipientAddress:
-			assertions.GreaterOrEqual(balance.Amt, float64(0), "Test address should have balance greater than or equal to 10")
+			assertions.GreaterOrEqual(balance.Amt, float64(0), "Recipient address should have balance greater than or equal to 0")
 			foundRecipientAddress = true
 		}
 	}
