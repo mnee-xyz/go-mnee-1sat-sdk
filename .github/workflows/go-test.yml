@@ -34,7 +34,7 @@ jobs:
         env:
           MNEE_TEST_ENV: ${{ matrix.environment }}
           MNEE_API_KEY: ${{ secrets.MNEE_API_KEY }}
-          MNEE_TEST_ADDRESS: ${{ secrets.MNEE_TEST_ADDRESS }} 
+          MNEE_TEST_ADDRESS: ${{ vars.MNEE_TEST_ADDRESS }} 
           MNEE_WIF: ${{ secrets.MNEE_WIF }}
-          MNEE_RECIPIENT_ADDRESS: ${{ secrets.MNEE_RECIPIENT_ADDRESS }}
+          MNEE_RECIPIENT_ADDRESS: ${{ vars.MNEE_RECIPIENT_ADDRESS }}
         run: go test -v -parallel=1 ./...
