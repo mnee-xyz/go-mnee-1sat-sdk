@@ -21,8 +21,8 @@ func main() {
 		log.Fatalf("Error creating MNEE instance: %v", err)
 	}
 
-	// 1. Get Unspent UTXOs for an address
-	fmt.Printf("Fetching UTXOs for address: %s...\n", testAddress)
+	// 1. Get Unspent UTXOs for an address (gets all)
+	fmt.Printf("Fetching all UTXOs for address: %s...\n", testAddress)
 	utxos, err := m.GetUnspentTxos(context.Background(), []string{testAddress})
 	if err != nil {
 		log.Fatalf("Error getting UTXOs: %v", err)
@@ -48,5 +48,22 @@ func main() {
 		fmt.Printf("   Amount (Atomic): %d\n", singleUtxo.Data.Bsv21.Amt)
 	} else {
 		fmt.Println("No UTXOs found for this address.")
+	}
+
+	// 3. Get Paginated Unspent UTXOs
+	fmt.Printf("\nFetching Paginated UTXOs (Page 1, Size 10) for address: %s...\n", testAddress)
+	page := 1
+	size := 10 // You can change this to a smaller number like 1 or 2 for testing
+	paginatedUtxos, err := m.GetPaginatedUnspentTxos(context.Background(), []string{testAddress}, page, size)
+	if err != nil {
+		log.Fatalf("Error getting paginated UTXOs: %v", err)
+	}
+
+	fmt.Printf("Found %d paginated UTXOs on Page %d (Size %d):\n", len(paginatedUtxos), page, size)
+	for i, utxo := range paginatedUtxos {
+		fmt.Printf(" - [%d] UTXO Outpoint: %s, Amount: %d\n", i, *utxo.Outpoint, utxo.Data.Bsv21.Amt)
+	}
+	if len(paginatedUtxos) == 0 {
+		fmt.Println("No paginated UTXOs found on this page.")
 	}
 }
