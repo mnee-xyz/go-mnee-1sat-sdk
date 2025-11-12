@@ -26,7 +26,7 @@ func main() {
 	// --- Example 1: Synchronous Transfer ---
 	fmt.Println("Attempting Synchronous Transfer...")
 	transferDTOs := []mnee.TransferMneeDTO{
-		{Amount: 1000, Address: recipientAddress}, // Send 1000 atomic units (0.00001 MNEE if 5 decimals)
+		{Amount: 1000, Address: recipientAddress}, // Send 1000 atomic units (0.01 MNEE if 5 decimals)
 	}
 	wifs := []string{wif}
 
